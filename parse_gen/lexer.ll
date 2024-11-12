@@ -4,7 +4,7 @@
 # include <cerrno>
 # include <climits>
 # include <cstdlib>
-# include <cstring> // strerror
+# include <cstring>
 # include <string>
 # include "driver.hh"
 # include "parser.hh"
@@ -60,10 +60,10 @@ make_NUMBER (const std::string &s, const yy::parser::location_type& loc)
 {
 	long num = strtol (s.c_str(), NULL, 10);
 
-	if (! (INT_MIN <= n && n <= INT_MAX && errno != ERANGE))
+	if (! (INT_MIN <= num && num <= INT_MAX && errno != ERANGE))
 		throw yy::parser::syntax_error (loc, "integer is out of range: " + s);
 
-	return yy::parser::make_NUMBER (static_cast<int>(n), loc);
+	return yy::parser::make_NUMBER (static_cast<int>(num), loc);
 }
 
 void driver::scan_begin()

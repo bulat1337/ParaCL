@@ -27,7 +27,6 @@
 	#include "driver.hh"
 }
 
-%define api.token.prefix {TOK_}
 %token
 	ASSIGN	":="
 	MINUS	"-"
