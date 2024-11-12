@@ -58,7 +58,7 @@ assignment:
 	IDENTIFIER "=" exp { drv.variables[$1] = $3; };
 
 exp:
-	"number"
+	NUMBER
 | IDENTIFIER	{ $$ = drv.variables[$1]; }
 | exp "+" exp	 { $$ = $1 + $3; }
 | exp "-" exp	 { $$ = $1 - $3; }
@@ -68,8 +68,7 @@ exp:
 
 %%
 
-void
-yy::parser::error (const location_type& l, const std::string& m)
+void yy::parser::error (const location_type& loc, const std::string& msg)
 {
-	std::cerr << l << ": " << m << '\n';
+	std::cerr << loc << ": " << msg << '\n';
 }

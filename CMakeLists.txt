@@ -110,7 +110,6 @@ ADD_FLEX_BISON_DEPENDENCY(MyLexer MyParser)
 add_executable(lib.x ./main.cpp
     ${CMAKE_BINARY_DIR}/parser/lexer.cpp
     ${BISON_MyParser_OUTPUTS}
-    src/driver.cpp
 )
 
 # Include directories
@@ -127,11 +126,15 @@ endif()
 # Compiler options
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(lib.x PRIVATE DEBUG)
+
+	target_compile_definitions(lib.x PRIVATE YY_FLEX_DEBUG=1 YYDEBUG=1)
+
     target_compile_options(lib.x PRIVATE ${DEBUG_COMPILE_OPTIONS})
     target_link_options(lib.x PRIVATE
         -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
     )
 else()
     target_compile_options(lib.x PRIVATE ${RELEASE_COMPILE_OPTIONS})
+	target_compile_definitions(lib.x PRIVATE YY_FLEX_DEBUG=0 YYDEBUG=0)
 endif()
 
