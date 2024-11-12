@@ -85,7 +85,7 @@ set(DEBUG_COMPILE_OPTIONS
 	-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 )
 
-# ----- bison && flex -----
+# ----- Bison && Flex -----
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/parser)
 
