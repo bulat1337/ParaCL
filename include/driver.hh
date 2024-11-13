@@ -57,7 +57,7 @@ class driver
 		if (file.empty () || file == "-") yyin = stdin;
 		else if (!(yyin = fopen (file.c_str (), "r")))
 		{
-			std::cerr << "cannot open " << file << ": " << strerror (errno) << '\n';
+			std::cerr << "cannot open " << file << '\n';
 			exit (EXIT_FAILURE);
 		}
 	}
