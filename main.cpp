@@ -13,11 +13,7 @@ int main(int argc, char **argv)
 
     int res = 0;
 
-	std::ofstream out("output.txt");
-
-	if (!out.is_open()) return -1;
-
-    Driver drv(out);
+    Driver drv;
 
     for (int i = 1; i < argc; ++i)
     	res = drv.parse(argv[i]);

@@ -1,8 +1,10 @@
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
 
-#include "lib.h"
+#include <gtest/gtest.h>
+
 #include "log.h"
+#include "test_utils_detail.h"
 
 namespace test_utils
 {

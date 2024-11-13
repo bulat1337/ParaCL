@@ -3,6 +3,10 @@
 
 #include "driver.hh"
 
+#include <sstream>
+#include <fstream>
+
+#include <gtest/gtest.h>
 
 namespace test_utils
 {
@@ -10,24 +14,24 @@ namespace test_utils
 namespace detail
 {
 
-template <typename T> std::string get_result(std::string_view file_name)
+std::string get_result(std::string_view file_name)
 {
-	int res = 0;
+	int status = 0;
 
-    Driver drv;
+	std::stringstream result;
 
-	res = drv.parse(file_name);
+    Driver drv(result);
 
-	EXPEXT_EQ(res, 0);
+	status = drv.parse(std::string(file_name));
+
+	EXPECT_EQ(status, 0);
 
     return result.str();
 }
 
 inline std::string get_answer(std::string_view file_name)
 {
-    std::ifstream answer_file;
-
-    answer_file.open(std::string(file_name));
+    std::ifstream answer_file{std::string(file_name)};
 
     if (!answer_file.is_open())
     {
@@ -37,6 +41,8 @@ inline std::string get_answer(std::string_view file_name)
 
     std::string answer((std::istreambuf_iterator<char>(answer_file)),
                        std::istreambuf_iterator<char>());
+
+	answer.erase(std::remove(answer.begin(), answer.end(), '\n'), answer.end());
 
     return answer;
 }
