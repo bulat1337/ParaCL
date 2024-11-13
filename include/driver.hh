@@ -1,17 +1,18 @@
 
 #ifndef DRIVER_HH
-# define DRIVER_HH
+#define DRIVER_HH
 
-# include <string>
-# include <map>
+#include <string>
+#include <map>
+#include <ostream>
 
-# include "parser.hh"
+#include "parser.hh"
 
 extern int yy_flex_debug;
 extern int yydebug;
 extern FILE* yyin;
 
-# define YY_DECL \
+#define YY_DECL \
 	yy::parser::symbol_type yylex (Driver& drv)
 
 YY_DECL;
@@ -23,6 +24,7 @@ class Driver
 	int 			result;
 	std::string 	file;
 	yy::location 	location;
+	std::ostream& 	out;
 	std::vector<std::map<std::string, int>> var_table;
 	size_t cur_scope_id = 0;
 
@@ -30,7 +32,8 @@ class Driver
 
   public:
 
-  	Driver()
+  	Driver(std::ostream& _out = std::cout):
+		out(_out)
 	{
 		var_table.push_back(Variables{});
 	}
