@@ -1,4 +1,5 @@
 #include "driver.hh"
+#include "log.h"
 
 #include <iostream>
 
@@ -6,7 +7,11 @@ int main(int argc, char **argv)
 {
     int res = 0;
 
-    driver drv;
+	MSG("MACROSES:\n");
+	LOG("{}\n", YYDEBUG);
+	LOG("{}\n", YY_FLEX_DEBUG);
+
+    Driver drv;
 
     for (int i = 1; i < argc; ++i)
         if (!drv.parse(argv[i]))
