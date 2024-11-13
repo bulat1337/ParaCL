@@ -44,9 +44,14 @@ BLANK 	[ \t\r]
 "("			return yy::parser::make_LPAREN(loc);
 ")"			return yy::parser::make_RPAREN(loc);
 "="			return yy::parser::make_ASSIGN(loc);
+"?"			return yy::parser::make_READ(loc);
+"print"		return yy::parser::make_PRINT(loc);
+"{"			return yy::parser::make_LCPAREN(loc);
+"}"			return yy::parser::make_RCPAREN(loc);
+";"			return yy::parser::make_SEMIC(loc);
 
 {INT}		return make_NUMBER (yytext, loc);
-{ID}		return yy::parser::make_IDENTIFIER (yytext, loc);
+{ID}		return yy::parser::make_ID (yytext, loc);
 
 .			{
 				throw yy::parser::syntax_error
