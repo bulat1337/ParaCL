@@ -18,7 +18,7 @@ extern FILE* yyin;
 YY_DECL;
 
 
-class Driver
+class Driver final
 {
   public:
 	int 			result;
