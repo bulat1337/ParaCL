@@ -36,6 +36,8 @@ enum class UnaryOp
     NOT,
 };
 
+
+
 class INode
 {
 protected:
@@ -45,10 +47,7 @@ protected:
     :   childCount_(childCount) {} 
 
 public:
-    virtual INode* getChild(size_t i) const
-    {
-        return nullptr;
-    }
+    virtual const INodePtr& getChild(size_t i) const = 0;
 
     virtual int eval() const = 0;
 
@@ -58,6 +57,19 @@ public:
     }
 
     virtual ~INode() = default;
+};
+
+class IScope : public INode
+{
+protected:
+    IScope(size_t childCount)
+    :   INode(childCount) {}
+
+public:
+    virtual const std::unique_ptr<IScope>& resetScope()              = 0;
+    virtual const std::string& getVariable (const std::string& name) = 0;
+    virtual void insertVariable (std::string name, int initialValue)                   = 0;
+    virtual void insertNode (const INodePtr& node)                   = 0;
 };
 
 } // namespace AST
