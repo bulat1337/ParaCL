@@ -28,27 +28,37 @@
 
 %define api.token.prefix {TOK_}
 %token
-	ASSIGN	"="
-	MINUS	"-"
-	PLUS	"+"
-	STAR	"*"
-	SLASH	"/"
-	LPAREN	"("
-	RPAREN	")"
-	READ	"?"
-	PRINT	"print"
-	LCPAREN	"{"
-	RCPAREN	"}"
-	SEMIC	";"
+	ASSIGN		"="
+	MINUS		"-"
+	PLUS		"+"
+	STAR		"*"
+	SLASH		"/"
+	LPAREN		"("
+	RPAREN		")"
+	READ		"?"
+	PRINT		"print"
+	LCPAREN		"{"
+	RCPAREN		"}"
+	SEMIC		";"
+	IF			"if"
+	WHILE		"while"
+	GREATER		">"
+	LESS		"<"
+	GREATER_E	">="
+	LESS_E		"<="
+	EQUAL		"=="
+	NOT_EQUAL	"!="
 ;
 
 %token <std::string> ID "identifier"
 %token <int> NUMBER "number"
 
 %nterm <int> Expr
+%nterm <int> Assign
 
 %printer { yyo << $$; } <*>;
 
+%nonassoc "if"
 %nonassoc "print"
 %left "="
 %left "+" "-";
@@ -68,6 +78,9 @@ Statements: Statement
 Statement: /* nothing */
 		 | Expr ";"
 		 | Scope
+		 | Assign ";"
+		 | Cond_Stm
+		 | Std_Func ";"
 		 ;
 
 Scope: StartScope Statements EndScope
@@ -75,44 +88,20 @@ Scope: StartScope Statements EndScope
      ;
 
 StartScope: "{"
-{
-	++drv.cur_scope_id;
-	drv.var_table.push_back(Driver::Variables{});
-};
-
-EndScope: "}"
-{
-	--drv.cur_scope_id;
-	drv.var_table.push_back(Driver::Variables{});
-};
-
-
-Expr: Expr "+" Expr			{ $$ = $1 + $3; }
-   	| Expr "-" Expr			{ $$ = $1 - $3; }
-   	| Expr "*" Expr			{ $$ = $1 * $3; }
-  	| Expr "/" Expr			{ $$ = $1 / $3; }
-  	| "(" Expr ")"			{ $$ = $2; }
-  	| "-" Expr %prec UMINUS { $$ = - $2; }
-  	| NUMBER				{ $$ = $1; }
-  	| 	ID
-		{
-			for (int scope_id = static_cast<int>(drv.cur_scope_id); scope_id >= 0; --scope_id)
 			{
-				auto iter = drv.var_table[scope_id].find($1);
+				++drv.cur_scope_id;
+				drv.var_table.push_back(Driver::Variables{});
+			};
 
-				if (iter == drv.var_table[scope_id].end())
-					if (scope_id == 0)
-						throw yy::parser::syntax_error(drv.location, "Unknown identifier\n");
-					else continue;
-				else
-				{
-					$$ = iter->second;
-					break;
-				}
-			}
-		}
-	| "?"					{ std::cin >> $$; }
-   	| 	ID "=" Expr
+EndScope: 	"}"
+			{
+				--drv.cur_scope_id;
+				drv.var_table.push_back(Driver::Variables{});
+			};
+
+Cond_Stm: 	IF "(" Expr ")" Statement { std::cout << "Ignoring Cond_Stm\n"; };
+
+Assign: ID "=" Expr
 		{
 			MSG("Checking if assigned variable is already initialized\n");
 
@@ -130,9 +119,43 @@ Expr: Expr "+" Expr			{ $$ = $1 + $3; }
 
 			drv.var_table[scope_id][$1] = $3;
 
-		}
-	| "print" Expr			{ drv.out << $2; }
-   	;
+			$$ = $3;
+		};
+
+Std_Func: "print" Expr { drv.out << $2; }
+
+
+Expr: 	Expr "+" Expr			{ $$ = $1 + $3; }
+   	| 	Expr "-" Expr			{ $$ = $1 - $3; }
+   	| 	Expr "*" Expr			{ $$ = $1 * $3; }
+  	| 	Expr "/" Expr			{ $$ = $1 / $3; }
+	|	Expr ">" Expr			{ $$ = $1 > $3; }
+	|	Expr "<" Expr			{ $$ = $1 < $3; }
+	|	Expr ">=" Expr			{ $$ = $1 >= $3; }
+	|	Expr "<=" Expr			{ $$ = $1 <= $3; }
+	|	Expr "==" Expr			{ $$ = $1 == $3; }
+	|	Expr "!=" Expr			{ $$ = $1 != $3; }
+  	| 	"(" Expr ")"			{ $$ = $2; }
+  	| 	"-" Expr %prec UMINUS 	{ $$ = - $2; }
+  	| 	NUMBER					{ $$ = $1; }
+	| 	"?"						{ std::cin >> $$; }
+  	| 	ID
+		{
+			for (int scope_id = static_cast<int>(drv.cur_scope_id); scope_id >= 0; --scope_id)
+			{
+				auto iter = drv.var_table[scope_id].find($1);
+
+				if (iter == drv.var_table[scope_id].end())
+					if (scope_id == 0)
+						throw yy::parser::syntax_error(drv.location, "Unknown identifier\n");
+					else continue;
+				else
+				{
+					$$ = iter->second;
+					break;
+				}
+			}
+		};
 
 %%
 
