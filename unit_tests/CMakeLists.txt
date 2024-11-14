@@ -7,8 +7,6 @@ set(TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 add_definitions(-DTEST_DATA_DIR=\"${TEST_DATA_DIR}\")
 
 find_package(GTest REQUIRED)
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
 
 set(RELEASE_COMPILE_OPTIONS
 	-O2
@@ -79,6 +77,25 @@ set(DEBUG_COMPILE_OPTIONS
 	-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 )
 
+# ----- Bison && Flex -----
+
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/parser)
+
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
+set(BISON_INPUT ${CMAKE_SOURCE_DIR}/grammar/parser.yy)
+set(FLEX_INPUT ${CMAKE_SOURCE_DIR}/grammar/lexer.ll)
+
+BISON_TARGET(Parser ${BISON_INPUT} ${CMAKE_BINARY_DIR}/parser/parser.cpp
+    COMPILE_FLAGS "--defines=${CMAKE_BINARY_DIR}/parser/parser.hh")
+
+FLEX_TARGET(Lexer ${FLEX_INPUT} ${CMAKE_BINARY_DIR}/parser/lexer.cpp)
+
+ADD_FLEX_BISON_DEPENDENCY(Lexer Parser)
+
+# ----- Executable -----
+
 add_executable(unit_tests
     ${FLEX_Lexer_OUTPUTS}
     ${BISON_Parser_OUTPUTS}
@@ -110,6 +127,7 @@ target_include_directories(unit_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_BINARY_DIR}/parser
 	${CMAKE_SOURCE_DIR}/utils/include
+    ${CMAKE_SOURCE_DIR}/ast
 )
 
 if(ENABLE_BD_TESTS)
