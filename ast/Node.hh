@@ -2,11 +2,11 @@
 #define NODE_HH
 
 #include "INode.hh"
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 namespace AST
 {
@@ -16,28 +16,29 @@ class Scope final : public IScope
 private:
     std::vector<INodePtr> nodes_;
 
-    const std::unique_ptr<IScope>& parent_;
+    std::unique_ptr<IScope> parent_;
 
     std::unordered_map<std::string, int> variableTable_;
 
 public:
-    Scope(const std::unique_ptr<IScope>& parent) : IScope(0), parent_(parent) {}
+    Scope(std::unique_ptr<IScope>&& parent) 
+    :   IScope(0), parent_(std::move(parent)) {}
 
     const std::unique_ptr<IScope>& resetScope() override
     {
         return parent_;
     }
 
-    void insertNode(const INodePtr& node) override
+    void insertNode(INodePtr&& node) override
     {
-        nodes_.push_back(node);
+        nodes_.push_back(std::move(node));
 
         childCount_ = nodes_.size();
     }
 
-    const INodePtr& getChild(size_t i) const override
+    const INode& getChild(size_t i) const override
     {
-        return nodes_.at(i);
+        return *nodes_.at(i).get();
     }
 
     void insertVariable(std::string name, int initialValue = 0) override 
@@ -57,6 +58,10 @@ public:
         return variableTable_.end(); // TODO: ???
         // throw std::runtime_error("Variable not found: " + name);
     }
+
+    int eval() const override;
+
+    ~Scope() override = default;
 };
 
 class ConstantNode final : public INode
@@ -66,12 +71,16 @@ private:
 
 public:
     ConstantNode(int val)
-    :   val_(val) {}
+    :   INode(0), val_(val) {}
 
     int eval() const override
     {
         return val_;
     }
+
+    const INode& getChild(size_t i) const override;
+
+    ~ConstantNode() override = default;
 };
 
 class VariableNode final : public INode
@@ -81,7 +90,7 @@ private:
 
 public:
     VariableNode(VarIterator varIt)
-    :   varIt_(varIt) {}
+    :   INode(0), varIt_(varIt) {}
 
     void setValue(int value)
     {
@@ -92,6 +101,10 @@ public:
     {
         return varIt_->second;
     }
+
+    const INode& getChild(size_t i) const override;
+
+    ~VariableNode() override = default;
 };
 
 class BinaryOpNode final : public INode
@@ -102,20 +115,20 @@ private:
     BinaryOp op_;
 
 public:
-    BinaryOpNode(const INodePtr& left, BinaryOp op, const INodePtr& right)
+    BinaryOpNode(INodePtr&& left, BinaryOp op, INodePtr&& right)
     :   INode(2),
         left_(std::move(left)),
         right_(std::move(right)),
         op_(op) {}
 
-    INode* getChild(size_t i) const override
+    const INode& getChild(size_t i) const override
     {
         if (i > childCount_)
         {
             // TODO: error handling
         }
 
-        return i == 0 ? left_.get() : right_.get();
+        return i == 0 ? *left_.get() : *right_.get();
     }
 
     int eval() const override
@@ -166,8 +179,8 @@ public:
                 return leftVal || rightVal;
                 
             default:
+                return -1; // FIXME: remove this
                 // TODO: handle error
-            
         }
     }
 };
@@ -179,15 +192,15 @@ private:
     UnaryOp op_;
 
 public:
-    UnaryOpNode(const INodePtr& operand, UnaryOp op)
+    UnaryOpNode(INodePtr&& operand, UnaryOp op)
     :   INode(1),
         operand_(std::move(operand)),
         op_(op) {}
 
-    INode* getChild(size_t i) const override
+    const INode& getChild(size_t i) const override
     {
         // TODO: do we need to handle the input?
-        return operand_.get();
+        return *operand_.get();
     }
 
     int eval() const override
@@ -203,6 +216,7 @@ public:
                 return ! operandVal;
 
             default:
+                return -1; // FIXME: fixme
                 // TODO: error handle
         }
     }
@@ -215,18 +229,18 @@ private:
     INodePtr expr_;
 
 public:
-    AssignNode(const std::unique_ptr<VariableNode>& dest_, const INodePtr& expr_)
+    AssignNode(std::unique_ptr<VariableNode>&& dest, INodePtr&& expr)
     :   dest_(std::move(dest)),
         expr_(std::move(expr)) {}
     
-    INode* getChild(size_t i) const override
+    const INode& getChild(size_t i) const override
     {
         if (i > childCount_)
         {
             // TODO: error handling
         }
 
-        return i == 0 ? dest_.get() : expr_.get();
+        return i == 0 ? *dest_.get() : *expr_.get();
     }
 
     int eval() const override
@@ -246,15 +260,17 @@ private:
     INodePtr scope_;
 
 public:
-    WhileNode(const INodePtr& cond, const INodePtr& scope) 
+    WhileNode(INodePtr&& cond, INodePtr&& scope) 
     :   cond_(std::move(cond)),
         scope_(std::move(scope)) {}
 
-    INode* getChild(size_t i) const override
+    const INode& getChild(size_t i) const override
     {
         if (i > childCount_)
         {
         }
+
+        return i == 0 ? *cond_.get() : *scope_.get();
     }
 
     int eval() const override
@@ -278,26 +294,30 @@ private:
     INodePtr elseScope_;
 
 public:
-    IfNode(const INodePtr& cond, const INodePtr& ifScope, const INodePtr& elseScope = nullptr)
+    IfNode(INodePtr&& cond, INodePtr&& ifScope, INodePtr&& elseScope = nullptr)
     :   cond_(std::move(cond)),
         ifScope_(std::move(ifScope)),
         elseScope_(std::move(elseScope)) {}
 
-    const INodePtr& getChild(size_t i) const override
+    const INode& getChild(size_t i) const override
     {
         switch (i)
         {
             case 0:
-                return cond_;
+                return *cond_.get();
 
             case 1:
-                return ifScope_;
+                return *ifScope_.get();
 
             case 2:
                 if (elseScope_)
-                    return elseScope_;
+                    return *elseScope_.get();
 
-            defualt:
+            default:
+                return *cond_.get();
+
+
+            
                 // TODO: error handle
         }
     }
@@ -323,14 +343,14 @@ private:
     INodePtr expr_;
 
 public:
-    PrintNode(const INodePtr& expr)
+    PrintNode(INodePtr&& expr)
     :   expr_(std::move(expr)) {}
 
-    INode* getChild(size_t i) const override;
+    const INode& getChild(size_t i) const override;
 
     int eval() const override
     {
-        int value = expr->eval();
+        int value = expr_->eval();
 
         std::cout << value << std::endl;
 
@@ -344,7 +364,7 @@ class InNode final : public INode
 public:
     InNode() = default;
 
-    INode* getChild(size_t i) const override;
+    const INode& getChild(size_t i) const override;
 
     int eval() const override
     {
