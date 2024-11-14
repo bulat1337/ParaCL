@@ -1,7 +1,12 @@
 #ifndef TEST_UTILS_DETAIL
 #define TEST_UTILS_DETAIL
 
-#include "libh"
+#include "driver.hh"
+
+#include <sstream>
+#include <fstream>
+
+#include <gtest/gtest.h>
 
 namespace test_utils
 {
@@ -9,30 +14,24 @@ namespace test_utils
 namespace detail
 {
 
-template <typename T> std::string get_result(std::string_view file_name)
+std::string get_result(std::string_view file_name)
 {
-    std::ifstream test_data;
+	int status = 0;
 
-    test_data.open(std::string(file_name));
+	std::stringstream result;
 
-    if (!test_data.is_open())
-    {
-        LOG("Can't open {}\n", file_name);
-        throw;
-    }
+    Driver drv(result);
 
-    std::stringstream result;
+	status = drv.parse(std::string(file_name));
 
-    // get result using lib
+	EXPECT_EQ(status, 0);
 
     return result.str();
 }
 
 inline std::string get_answer(std::string_view file_name)
 {
-    std::ifstream answer_file;
-
-    answer_file.open(std::string(file_name));
+    std::ifstream answer_file{std::string(file_name)};
 
     if (!answer_file.is_open())
     {
@@ -42,6 +41,8 @@ inline std::string get_answer(std::string_view file_name)
 
     std::string answer((std::istreambuf_iterator<char>(answer_file)),
                        std::istreambuf_iterator<char>());
+
+	answer.erase(std::remove(answer.begin(), answer.end(), '\n'), answer.end());
 
     return answer;
 }

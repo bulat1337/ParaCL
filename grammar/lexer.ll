@@ -6,6 +6,7 @@
 # include <cstdlib>
 # include <cstring>
 # include <string>
+
 # include "driver.hh"
 # include "parser.hh"
 
@@ -43,9 +44,23 @@ BLANK 	[ \t\r]
 "("			return yy::parser::make_LPAREN(loc);
 ")"			return yy::parser::make_RPAREN(loc);
 "="			return yy::parser::make_ASSIGN(loc);
+"?"			return yy::parser::make_READ(loc);
+"print"		return yy::parser::make_PRINT(loc);
+"{"			return yy::parser::make_LCPAREN(loc);
+"}"			return yy::parser::make_RCPAREN(loc);
+";"			return yy::parser::make_SEMIC(loc);
+"if"		return yy::parser::make_IF(loc);
+"while"		return yy::parser::make_WHILE(loc);
+">"			return yy::parser::make_GREATER(loc);
+"<"			return yy::parser::make_LESS(loc);
+">="		return yy::parser::make_GREATER_E(loc);
+"<="		return yy::parser::make_LESS_E(loc);
+"=="		return yy::parser::make_EQUAL(loc);
+"!="		return yy::parser::make_NOT_EQUAL(loc);
+
 
 {INT}		return make_NUMBER (yytext, loc);
-{ID}		return yy::parser::make_IDENTIFIER (yytext, loc);
+{ID}		return yy::parser::make_ID (yytext, loc);
 
 .			{
 				throw yy::parser::syntax_error

@@ -1,34 +1,42 @@
 
 #ifndef DRIVER_HH
-# define DRIVER_HH
+#define DRIVER_HH
 
-# include <string>
-# include <map>
+#include <string>
+#include <unordered_map>
+#include <ostream>
 
-# include "parser.hh"
+#include "parser.hh"
 
 extern int yy_flex_debug;
-// extern int yydebug;
+extern int yydebug;
 extern FILE* yyin;
 
-# define YY_DECL \
-	yy::parser::symbol_type yylex (driver& drv)
+#define YY_DECL \
+	yy::parser::symbol_type yylex (Driver& drv)
 
 YY_DECL;
 
 
-class driver
+class Driver final
 {
   public:
-	std::map<std::string, int> variables;
+	std::string 	file;
+	yy::location 	location;
+	std::ostream& 	out;
+	size_t 			cur_scope_id = 0;
 
-	int result;
+	using Variables = std::unordered_map<std::string, int>;
 
-	std::string file;
-
-	yy::location location;
+	std::vector<Variables> var_table;
 
   public:
+
+  	Driver(std::ostream& _out = std::cout):
+		out(_out)
+	{
+		var_table.push_back(Variables{});
+	}
 
 	int parse(const std::string &f)
 	{
@@ -38,9 +46,11 @@ class driver
 
 		scan_begin();
 
-		// yydebug = YYDEBUG;
-
 		yy::parser parse(*this);
+
+		#if YYDEBUG
+    	parse.set_debug_level(YYDEBUG);
+		#endif
 
 		int res = parse();
 
@@ -48,7 +58,6 @@ class driver
 
 		return res;
 	}
-
 
 	void scan_begin()
 	{

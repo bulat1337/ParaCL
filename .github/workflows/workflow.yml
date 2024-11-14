@@ -12,14 +12,9 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         compiler: [gcc-11, gcc, clang]
         build_type: [Release, Debug]
-        exclude:
-          - os: macos-latest
-            compiler: gcc-11
-          - os: macos-latest
-            compiler: gcc
 
     steps:
       - name: Checkout source code
@@ -44,12 +39,19 @@ jobs:
             conan install . --output-folder=third_party --build=missing -s build_type=Release
           fi
 
+      # Install Bison and Flex
+      - name: Install Bison and Flex
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install -y bison flex
+
       # Ubuntu compiler setup
       - name: Set up compiler (Ubuntu GCC 11)
         if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc-11'
         run: |
           sudo apt update
-          sudo apt install g++-11
+          sudo apt install -y g++-11
         env:
           CC: gcc-11
           CXX: g++-11
@@ -58,35 +60,20 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
         run: |
           sudo apt update
-          sudo apt install clang
-        env:
-          CC: clang
-          CXX: clang++
-
-      # macOS compiler setup (use default Clang)
-      - name: Set up compiler (macOS Clang)
-        if: matrix.os == 'macos-latest'
-        run: echo "Using default Clang compiler on macOS"
+          sudo apt install -y clang
         env:
           CC: clang
           CXX: clang++
 
       - name: Configure CMake
         run: |
-          bison --version
-          if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            cmake -B build \
-              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_TOOLCHAIN_FILE=./third_party/conan_toolchain.cmake \
-              -DCMAKE_CXX_FLAGS="-stdlib=libc++"
-          else
-            cmake -B build \
-              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_TOOLCHAIN_FILE=./third_party/conan_toolchain.cmake
-          fi
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_TOOLCHAIN_FILE=./third_party/conan_toolchain.cmake
 
       - name: Build with CMake
         run: cmake --build build
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
+

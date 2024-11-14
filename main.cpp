@@ -1,18 +1,21 @@
-#include "driver.hh"
+#include <string>     // for basic_string
 
-#include <iostream>
+#include "driver.hh"  // for Driver
+#include "log.h"      // for LOG, MSG
 
 int main(int argc, char **argv)
 {
+
+	MSG("MACROSES:\n");
+	LOG("YYDEBUG: {}\n", YYDEBUG);
+	LOG("YY_FLEX_DEBUG: {}\n", YY_FLEX_DEBUG);
+
     int res = 0;
 
-    driver drv;
+    Driver drv;
 
     for (int i = 1; i < argc; ++i)
-        if (!drv.parse(argv[i]))
-            std::cout << drv.result << '\n';
-        else
-            res = 1;
+    	res = drv.parse(argv[i]);
 
     return res;
 }

@@ -21,7 +21,7 @@ private:
     std::unordered_map<std::string, int> variableTable_;
 
 public:
-    Scope(IScope* parent) 
+    Scope(ObserverPtr<IScope> parent) 
     :   IScope(0), parent_(parent) {}
 
     const ObserverPtr<IScope>& resetScope() override
