@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <exception>
 #include <unordered_map>
 #include <vector>
 
@@ -22,8 +21,6 @@ private:
     std::unordered_map<std::string, int> variableTable_;
 
 public:
-    using VarIterator = std::unordered_map<std::string, int>::iterator;
-
     Scope(const std::unique_ptr<IScope>& parent) : IScope(0), parent_(parent) {}
 
     const std::unique_ptr<IScope>& resetScope() override
@@ -48,7 +45,7 @@ public:
         variableTable_.emplace(name, initialValue);
     }
 
-    VarIterator getVariableIterator(const std::string& name) 
+    VarIterator getVariableIterator(const std::string& name) override
     {
         auto it = variableTable_.find(name);
 
@@ -80,10 +77,10 @@ public:
 class VariableNode final : public INode
 {
 private:
-    Scope::VarIterator varIt_;
+    VarIterator varIt_;
 
 public:
-    VariableNode(Scope::VarIterator varIt)
+    VariableNode(VarIterator varIt)
     :   varIt_(varIt) {}
 
     void setValue(int value)
@@ -172,7 +169,6 @@ public:
                 // TODO: handle error
             
         }
-
     }
 };
 
@@ -287,7 +283,24 @@ public:
         ifScope_(std::move(ifScope)),
         elseScope_(std::move(elseScope)) {}
 
-    INode* getChild(size_t i) const override;
+    const INodePtr& getChild(size_t i) const override
+    {
+        switch (i)
+        {
+            case 0:
+                return cond_;
+
+            case 1:
+                return ifScope_;
+
+            case 2:
+                if (elseScope_)
+                    return elseScope_;
+
+            defualt:
+                // TODO: error handle
+        }
+    }
 
     int eval() const override
     {
