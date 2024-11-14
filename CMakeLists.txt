@@ -92,8 +92,8 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/parser)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
-set(BISON_INPUT ${CMAKE_SOURCE_DIR}/parse_gen/parser.yy)
-set(FLEX_INPUT ${CMAKE_SOURCE_DIR}/parse_gen/lexer.ll)
+set(BISON_INPUT ${CMAKE_SOURCE_DIR}/grammar/parser.yy)
+set(FLEX_INPUT ${CMAKE_SOURCE_DIR}/grammar/lexer.ll)
 
 BISON_TARGET(Parser ${BISON_INPUT} ${CMAKE_BINARY_DIR}/parser/parser.cpp
     COMPILE_FLAGS "--defines=${CMAKE_BINARY_DIR}/parser/parser.hh")

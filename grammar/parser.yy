@@ -22,6 +22,7 @@
 
 %code
 {
+	#include "log.h"
 	#include "driver.hh"
 }
 
@@ -108,11 +109,28 @@ Expr: Expr "+" Expr			{ $$ = $1 + $3; }
 					$$ = iter->second;
 					break;
 				}
-
 			}
 		}
 	| "?"					{ std::cin >> $$; }
-   	| ID "=" Expr			{ drv.var_table[drv.cur_scope_id][$1] = $3; }
+   	| 	ID "=" Expr
+		{
+			MSG("Checking if assigned variable is already initialized\n");
+
+			size_t scope_id = 0;
+
+			while (scope_id != drv.cur_scope_id)
+			{
+				if (drv.var_table[scope_id].contains($1))
+				{
+					LOG("{} alredy initialized\n", $1);
+					break;
+				}
+				++scope_id;
+			}
+
+			drv.var_table[scope_id][$1] = $3;
+
+		}
 	| "print" Expr			{ drv.out << $2; }
    	;
 
