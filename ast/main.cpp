@@ -16,7 +16,7 @@ int main() {
     auto assignNode = std::make_unique<AST::AssignNode>(std::move(varNode), std::move(constNode));
 
     // Evaluate the assignment
-    assignNode->eval();
+     assignNode->eval();
 
     // Check the updated value
     std::cout << "x = " << varIt->second << std::endl; // Should print: x = 42
