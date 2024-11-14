@@ -3,7 +3,7 @@
 #define DRIVER_HH
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <ostream>
 
 #include "parser.hh"
@@ -21,14 +21,14 @@ YY_DECL;
 class Driver final
 {
   public:
-	int 			result;
 	std::string 	file;
 	yy::location 	location;
 	std::ostream& 	out;
-	std::vector<std::map<std::string, int>> var_table;
-	size_t cur_scope_id = 0;
+	size_t 			cur_scope_id = 0;
 
-	using Variables = std::map<std::string, int>;
+	using Variables = std::unordered_map<std::string, int>;
+
+	std::vector<Variables> var_table;
 
   public:
 
@@ -58,7 +58,6 @@ class Driver final
 
 		return res;
 	}
-
 
 	void scan_begin()
 	{

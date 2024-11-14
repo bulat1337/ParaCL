@@ -1,8 +1,7 @@
-#include "driver.hh"
-#include "log.h"
+#include <string>     // for basic_string
 
-#include <iostream>
-#include <fstream>
+#include "driver.hh"  // for Driver
+#include "log.h"      // for LOG, MSG
 
 int main(int argc, char **argv)
 {
