@@ -3,8 +3,8 @@
 
 #include "driver.hh"
 
-#include <sstream>
 #include <fstream>
+#include <sstream>
 
 #include <gtest/gtest.h>
 
@@ -16,15 +16,15 @@ namespace detail
 
 std::string get_result(std::string_view file_name)
 {
-	int status = 0;
+    int status = 0;
 
-	std::stringstream result;
+    std::stringstream result;
 
     Driver drv(result);
 
-	status = drv.parse(std::string(file_name));
+    status = drv.parse(std::string(file_name));
 
-	EXPECT_EQ(status, 0);
+    EXPECT_EQ(status, 0);
 
     return result.str();
 }
@@ -42,7 +42,7 @@ inline std::string get_answer(std::string_view file_name)
     std::string answer((std::istreambuf_iterator<char>(answer_file)),
                        std::istreambuf_iterator<char>());
 
-	answer.erase(std::remove(answer.begin(), answer.end(), '\n'), answer.end());
+    answer.erase(std::remove(answer.begin(), answer.end(), '\n'), answer.end());
 
     return answer;
 }

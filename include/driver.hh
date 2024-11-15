@@ -76,4 +76,4 @@ class Driver final
 		fclose (yyin);
 	}
 };
-#endif // ! DRIVER_HH
+#endif // DRIVER_HH

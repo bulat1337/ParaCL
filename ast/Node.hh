@@ -21,7 +21,7 @@ private:
     std::unordered_map<std::string, int> variableTable_;
 
 public:
-    Scope(std::unique_ptr<IScope>&& parent) 
+    Scope(std::unique_ptr<IScope>&& parent)
     :   IScope(0), parent_(std::move(parent)) {}
 
     const std::unique_ptr<IScope>& resetScope() override
@@ -41,7 +41,7 @@ public:
         return *nodes_.at(i).get();
     }
 
-    void insertVariable(std::string name, int initialValue = 0) override 
+    void insertVariable(std::string name, int initialValue = 0) override
     {
         variableTable_.emplace(name, initialValue);
     }
@@ -50,7 +50,7 @@ public:
     {
         auto it = variableTable_.find(name);
 
-        if (it != variableTable_.end()) 
+        if (it != variableTable_.end())
         {
             return it;
         }
@@ -136,7 +136,7 @@ public:
         int leftVal = left_->eval();
         int rightVal = right_->eval();
 
-        switch (op_) 
+        switch (op_)
         {
             case BinaryOp::ADD:
                 return leftVal + rightVal;
@@ -177,7 +177,7 @@ public:
 
             case BinaryOp::OR:
                 return leftVal || rightVal;
-                
+
             default:
                 return -1; // FIXME: remove this
                 // TODO: handle error
@@ -211,7 +211,7 @@ public:
         {
             case UnaryOp::NEG:
                 return - operandVal;
-            
+
             case UnaryOp::NOT:
                 return ! operandVal;
 
@@ -232,7 +232,7 @@ public:
     AssignNode(std::unique_ptr<VariableNode>&& dest, INodePtr&& expr)
     :   dest_(std::move(dest)),
         expr_(std::move(expr)) {}
-    
+
     const INode& getChild(size_t i) const override
     {
         if (i > childCount_)
@@ -260,7 +260,7 @@ private:
     INodePtr scope_;
 
 public:
-    WhileNode(INodePtr&& cond, INodePtr&& scope) 
+    WhileNode(INodePtr&& cond, INodePtr&& scope)
     :   cond_(std::move(cond)),
         scope_(std::move(scope)) {}
 
@@ -276,12 +276,12 @@ public:
     int eval() const override
     {
         int result = 0;
-        
+
         while (cond_->eval())
         {
             result = scope_->eval();
         }
-        
+
         return result;
     }
 };
@@ -317,7 +317,7 @@ public:
                 return *cond_.get();
 
 
-            
+
                 // TODO: error handle
         }
     }
