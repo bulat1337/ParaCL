@@ -52,14 +52,16 @@
 	NOT			"!"
 ;
 
-%token <std::unique_ptr<AST::VariableNode>> ID "identifier"
-%token <std::unique_ptr<AST::ConstantNode>> NUMBER "number"
+%token <std::unique_ptr<AST::VariableNode>> ID		"identifier"
+%token <std::unique_ptr<AST::ConstantNode>> NUMBER 	"number"
 
 // ----- Statement derived -----
 // NOTE: No ExprNode in AST yet
 %nterm <std::unique_ptr<AST::ExprNode> 			Expr
+%nterm <std::unique_ptr<AST::UnaryOpNode> 		UnaryOp
+%nterm <std::unique_ptr<AST::BinaryOpNode> 		BinaryOp
 %nterm <std::unique_ptr<AST::AssignNode>> 		Assign
-%nterm <std::unique_ptr<AST::Scope>> 			Scope
+%nterm <std::unique_ptr<AST::ScopeNode>> 		Scope
 %nterm <std::unique_ptr<AST::PrintNode>> 		Print
 %nterm <std::unique_ptr<AST::IfNode>> 			If_Stm
 
@@ -94,13 +96,13 @@ Statement: /* nothing */
 
 Scope: 	StartScope Statements EndScope
 		{
-			$$ = std::make_unique<AST::Scope>(drv.scopes[cur_scope_id]);
+			$$ = std::make_unique<AST::ScopeNode>(drv.scopes[cur_scope_id]);
 		};
 
 StartScope: "{"
 			{
 				++drv.cur_scope_id;
-				drv.scopes.push_back(AST::Scope{});
+				drv.scopes.push_back(AST::ScopeNode{});
 			};
 
 EndScope: 	"}"
@@ -122,78 +124,86 @@ Assign: ID "=" Expr
 Print: "print" Expr { $$ = std::make_unique<AST::PrintNode>(std::move(Expr)); }
 
 
-Expr: 	Expr "+" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(std::move($1),
-														AST::BinaryOp::ADD,
-														std::move($3));
-		}
-   	| 	Expr "-" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::SUB,
-														std::move($3));
-		}
-   	| 	Expr "*" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::MUL,
-														std::move($3));
-		}
-  	| 	Expr "/" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::DIV,
-														std::move($3));
-		}
-	|	Expr ">" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::GR,
-														std::move($3));
-		}
-	|	Expr "<" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::LS,
-														std::move($3));
-		}
-	|	Expr ">=" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::GR_EQ,
-														std::move($3));
-		}
-	|	Expr "<=" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::LS_EQ,
-														std::move($3));
-		}
-	|	Expr "==" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::EQ,
-														std::move($3));
-		}
-	|	Expr "!=" Expr
-		{
-			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-														AST::BinaryOp::NOT_EQ,
-														std::move($3));
-		}
-  	| 	"(" Expr ")"			{ $$ = std::move($2); }
-  	| 	"-" Expr %prec UMINUS
-		{
-			$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NEG);
-		}
-	| 	"!" Expr %prec NOT
-		{
-			$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NOT);
-		}
-  	| 	NUMBER	{ $$ = std::make_unique<AST::ConstantNode>($1); }
-	| 	"?"		{ $$ = std::make_unique<AST::InNode>(); }
-  	| 	ID 		{ $$ = std::make_unique<AST::VariableNode>($1); };
+Expr:	BinaryOp		{ $$ = std::make_unique<AST::BinaryOp>($1); }
+	|	UnaryOp			{ $$ = std::make_unique<AST::UnaryOp>($1); }
+  	| 	"(" Expr ")"	{ $$ = std::move($2); }
+  	| 	NUMBER			{ $$ = std::make_unique<AST::ConstantNode>($1); }
+	| 	"?"				{ $$ = std::make_unique<AST::InNode>(); }
+  	| 	ID 				{ $$ = std::make_unique<AST::VariableNode>($1); }
+	;
+
+BinaryOp: 	Expr "+" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::ADD,
+															std::move($3));
+			}
+		| 	Expr "-" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::SUB,
+															std::move($3));
+			}
+		| 	Expr "*" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::MUL,
+															std::move($3));
+			}
+		| 	Expr "/" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::DIV,
+															std::move($3));
+			}
+		|	Expr ">" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::GR,
+															std::move($3));
+			}
+		|	Expr "<" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::LS,
+															std::move($3));
+			}
+		|	Expr ">=" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::GR_EQ,
+															std::move($3));
+			}
+		|	Expr "<=" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::LS_EQ,
+															std::move($3));
+			}
+		|	Expr "==" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::EQ,
+															std::move($3));
+			}
+		|	Expr "!=" Expr
+			{
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::NOT_EQ,
+															std::move($3));
+			}
+		;
+
+
+UnaryOp	: 	"-" Expr %prec UMINUS
+			{
+				$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NEG);
+			}
+	 	| 	"!" Expr %prec NOT
+			{
+				$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NOT);
+			}
+	 	;
 
 %%
 
