@@ -1,137 +1,113 @@
 #ifndef NODE_HH
 #define NODE_HH
 
+#include "detail/context.hh"
+#include "detail/inode.hh"
 #include "inode.hh"
 #include <cmath>
-#include <cstddef>
-#include <unordered_map>
+#include <cstdint>
+#include <memory>
+#include <string>
 #include <vector>
 #include <iostream>
 
 namespace AST
 {
 
-class Scope final : public IScope
+class StatementNode : public INode {};
+
+class ExpressionNode : public StatementNode {};
+
+class ConditionalStatementNode : public StatementNode {};
+
+using ExprPtr = std::unique_ptr<ExpressionNode>;
+
+using StmtPtr = std::unique_ptr<StatementNode>;
+
+using CondStmtPtr = std::unique_ptr<ConditionalStatementNode>;
+
+class ScopeNode final : public StatementNode
 {
 private:
-    std::vector<INodePtr> nodes_;
-
-    ObserverPtr<IScope> parent_;
-
-    std::unordered_map<std::string, int> variableTable_;
+    std::vector<StatementNode> children_;
 
 public:
-    Scope(ObserverPtr<IScope> parent)
-    :   IScope(0), parent_(parent) {}
-
-    const ObserverPtr<IScope>& resetScope() override
+    int eval(detail::Context& ctx) const override 
     {
-        return parent_;
-    }
+        ctx.curScope_++;
 
-    void insertNode(INodePtr&& node) override
-    {
-        nodes_.push_back(std::move(node));
+        ctx.varTables_.push_back(detail::Context::VarTable());
 
-        childCount_ = nodes_.size();
-    }
-
-    const INode& getChild(size_t i) const override
-    {
-        return *nodes_.at(i).get();
-    }
-
-    void insertVariable(std::string name, int initialValue = 0) override
-    {
-        variableTable_.emplace(name, initialValue);
-    }
-
-    VarIterator getVariableIterator(const std::string& name) override
-    {
-        auto it = variableTable_.find(name);
-
-        if (it != variableTable_.end())
+        for (auto child : children_)
         {
-            return it;
+            child.eval(ctx);
         }
 
-        return variableTable_.end(); // TODO: ???
-        // throw std::runtime_error("Variable not found: " + name);
+        ctx.varTables_.pop_back();
+
+        ctx.curScope_--;
     }
-
-    int eval() const override {}
-
-   ~Scope() override = default;
 };
 
-class ConstantNode final : public INode
+class ConstantNode final : public ExpressionNode
 {
 private:
     const int val_;
 
 public:
     ConstantNode(int val)
-    :   INode(0), val_(val) {}
+    :   val_(val) {}
 
-    int eval() const override
+    int eval(detail::Context& ctx) const override
     {
         return val_;
     }
-
-    const INode& getChild(size_t i) const override {}
-
-    ~ConstantNode() override = default;
 };
 
 class VariableNode final : public INode
 {
 private:
-    VarIterator varIt_;
+    std::string name_;
 
 public:
-    VariableNode(VarIterator varIt)
-    :   INode(0), varIt_(varIt) {}
-
-    void setValue(int value)
+    const std::string& getName() const
     {
-        varIt_->second = value;
+        return name_;
     }
 
-    int eval() const override
+    int eval(detail::Context& ctx) const override
     {
-        return varIt_->second;
+        for (int32_t scopeId = ctx.curScope_; scopeId >= 0; --scopeId)
+        {
+            auto it = ctx.varTables_[scopeId].find(name_);
+
+            if (it != ctx.varTables_[scopeId].end())
+            {
+                return it->second;
+            }
+            
+            if (scopeId == 0)
+            {
+                throw std::logic_error("Undeclared variable");
+            }
+        }
     }
-
-    const INode& getChild(size_t i) const override {}
-
-    ~VariableNode() override = default;
 };
 
-class BinaryOpNode final : public INode
+class BinaryOpNode final : public ExpressionNode
 {
 private:
-    INodePtr left_;
-    INodePtr right_;
+    ExprPtr left_;
+    ExprPtr right_;
     BinaryOp op_;
 
 public:
-    BinaryOpNode(INodePtr&& left, BinaryOp op, INodePtr&& right)
-    :   INode(2),
-        left_(std::move(left)),
+    BinaryOpNode(ExprPtr&& left, BinaryOp op, ExprPtr&& right)
+    :   left_(std::move(left)),
         right_(std::move(right)),
         op_(op) {}
 
-    const INode& getChild(size_t i) const override
-    {
-        if (i > childCount_)
-        {
-            // TODO: error handling
-        }
-
-        return i == 0 ? *left_.get() : *right_.get();
-    }
-
-    int eval() const override
+    int eval(detail::Context& ctx) const override
     {
         int leftVal = left_->eval();
         int rightVal = right_->eval();
@@ -185,25 +161,18 @@ public:
     }
 };
 
-class UnaryOpNode final : public INode
+class UnaryOpNode final : public ExpressionNode
 {
 private:
-    INodePtr operand_;
+    ExprPtr operand_;
     UnaryOp op_;
 
 public:
-    UnaryOpNode(INodePtr&& operand, UnaryOp op)
-    :   INode(1),
-        operand_(std::move(operand)),
+    UnaryOpNode(ExprPtr&& operand, UnaryOp op)
+    :   operand_(std::move(operand)),
         op_(op) {}
 
-    const INode& getChild(size_t i) const override
-    {
-        // TODO: do we need to handle the input?
-        return *operand_.get();
-    }
-
-    int eval() const override
+    int eval(detail::Context& ctx) const override
     {
         int operandVal = operand_->eval();
 
@@ -222,58 +191,46 @@ public:
     }
 };
 
-class AssignNode final : public INode
+class AssignNode final : public StatementNode
 {
 private:
     std::unique_ptr<VariableNode> dest_;
-    INodePtr expr_;
+    ExprPtr expr_;
 
 public:
-    AssignNode(std::unique_ptr<VariableNode>&& dest, INodePtr&& expr)
+    AssignNode(std::unique_ptr<VariableNode>&& dest, ExprPtr&& expr)
     :   dest_(std::move(dest)),
         expr_(std::move(expr)) {}
 
-    const INode& getChild(size_t i) const override
+    int eval(detail::Context& ctx) const override
     {
-        if (i > childCount_)
-        {
-            // TODO: error handling
-        }
+        std::string destName = dest_->getName();
 
-        return i == 0 ? *dest_.get() : *expr_.get();
-    }
+        int value = expr_->eval(ctx);
 
-    int eval() const override
-    {
-        int value = expr_->eval();
+        int32_t scopeId = 0;
 
-        dest_->setValue(value);
+        while (scopeId <= ctx.curScope_)
+            if (ctx.varTables_[scopeId].contains(destName)) break;
+
+        ctx.varTables_[scopeId][destName] = value;
 
         return value;
     }
 };
 
-class WhileNode final : public INode
+class WhileNode final : public ConditionalStatementNode
 {
 private:
-    INodePtr cond_;
-    INodePtr scope_;
+    ExprPtr cond_;
+    StmtPtr scope_;
 
 public:
-    WhileNode(INodePtr&& cond, INodePtr&& scope)
+    WhileNode(ExprPtr&& cond, StmtPtr&& scope)
     :   cond_(std::move(cond)),
         scope_(std::move(scope)) {}
 
-    const INode& getChild(size_t i) const override
-    {
-        if (i > childCount_)
-        {
-        }
-
-        return i == 0 ? *cond_.get() : *scope_.get();
-    }
-
-    int eval() const override
+    int eval(detail::Context& ctx) const override
     {
         int result = 0;
 
@@ -286,71 +243,46 @@ public:
     }
 };
 
-class IfNode final : public INode
+class IfNode final : public ConditionalStatementNode
 {
 private:
-    INodePtr cond_;
-    INodePtr ifScope_;
-    INodePtr elseScope_;
+    ExprPtr cond_;
+    StmtPtr action_;
+    StmtPtr altAction_;
 
 public:
-    IfNode(INodePtr&& cond, INodePtr&& ifScope, INodePtr&& elseScope = nullptr)
+    IfNode(ExprPtr&& cond, StmtPtr&& action, StmtPtr&& altAction)
     :   cond_(std::move(cond)),
-        ifScope_(std::move(ifScope)),
-        elseScope_(std::move(elseScope)) {}
+        action_(std::move(action)),
+        altAction_(std::move(altAction)) {}
 
-    const INode& getChild(size_t i) const override
+    int eval(detail::Context& ctx) const override
     {
-        switch (i)
+        if (cond_->eval(ctx))
         {
-            case 0:
-                return *cond_.get();
-
-            case 1:
-                return *ifScope_.get();
-
-            case 2:
-                if (elseScope_)
-                    return *elseScope_.get();
-
-            default:
-                return *cond_.get();
-
-
-
-                // TODO: error handle
+            return action_->eval(ctx);
         }
-    }
-
-    int eval() const override
-    {
-        if (cond_->eval())
+        else
         {
-            return ifScope_->eval();
-        }
-        else if (elseScope_)
-        {
-            return elseScope_->eval();
+            return altAction_->eval(ctx);
         }
 
         return 0;
     }
 };
 
-class PrintNode final : public INode
+class PrintNode final : public StatementNode
 {
 private:
-    INodePtr expr_;
+    ExprPtr expr_;
 
 public:
-    PrintNode(INodePtr&& expr)
+    PrintNode(ExprPtr&& expr)
     :   expr_(std::move(expr)) {}
 
-    const INode& getChild(size_t i) const override;
-
-    int eval() const override
+    int eval(detail::Context& ctx) const override
     {
-        int value = expr_->eval();
+        int value = expr_->eval(ctx);
 
         std::cout << value << std::endl;
 
@@ -359,14 +291,12 @@ public:
 };
 
 
-class InNode final : public INode
+class InNode final : public StatementNode
 {
 public:
     InNode() = default;
 
-    const INode& getChild(size_t i) const override;
-
-    int eval() const override
+    int eval(detail::Context& ctx) const override
     {
         int value = 0;
 
