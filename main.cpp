@@ -10,12 +10,12 @@ int main(int argc, char **argv)
     LOG("YYDEBUG: {}\n", YYDEBUG);
     LOG("YY_FLEX_DEBUG: {}\n", YY_FLEX_DEBUG);
 
-    int res = 0;
+    int status = 0;
 
     Driver drv;
 
     for (int i = 1; i < argc; ++i)
-        res = drv.parse(argv[i]);
+        status = drv.parse(argv[i]);
 
-    return res;
+    return status;
 }

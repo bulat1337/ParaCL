@@ -125,9 +125,9 @@ target_link_libraries(unit_tests
 target_include_directories(unit_tests PRIVATE
 	${CMAKE_SOURCE_DIR}/unit_tests/test_utils/include
     ${CMAKE_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/include/detail
     ${CMAKE_BINARY_DIR}/parser
 	${CMAKE_SOURCE_DIR}/utils/include
-    ${CMAKE_SOURCE_DIR}/ast
 )
 
 if(ENABLE_BD_TESTS)

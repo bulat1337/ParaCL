@@ -111,6 +111,7 @@ add_executable(paracl.x ./main.cpp
 
 target_include_directories(paracl.x PRIVATE
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/detail
     ${CMAKE_BINARY_DIR}/parser
 	${CMAKE_SOURCE_DIR}/utils/include
 )

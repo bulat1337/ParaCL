@@ -24,6 +24,7 @@
 {
 	#include "log.h"
 	#include "driver.hh"
+	#include "node.hh"
 }
 
 %define api.token.prefix {TOK_}
@@ -48,22 +49,30 @@
 	LESS_E		"<="
 	EQUAL		"=="
 	NOT_EQUAL	"!="
+	NOT			"!"
 ;
 
-%token <std::string> ID "identifier"
-%token <int> NUMBER "number"
+%token <std::unique_ptr<AST::VariableNode>> ID "identifier"
+%token <std::unique_ptr<AST::ConstantNode>> NUMBER "number"
 
-%nterm <int> Expr
-%nterm <int> Assign
+// ----- Statement derived -----
+// NOTE: No ExprNode in AST yet
+%nterm <std::unique_ptr<AST::ExprNode> 			Expr
+%nterm <std::unique_ptr<AST::AssignNode>> 		Assign
+%nterm <std::unique_ptr<AST::Scope>> 			Scope
+%nterm <std::unique_ptr<AST::PrintNode>> 		Print
+%nterm <std::unique_ptr<AST::IfNode>> 			If_Stm
+
+%nterm <std::unique_ptr<AST::StatementNode>>	Statement
 
 %printer { yyo << $$; } <*>;
 
 %nonassoc "if"
 %nonassoc "print"
 %left "="
-%left "+" "-";
-%left "*" "/";
-%nonassoc UMINUS
+%left "+" "-"
+%left "*" "/"
+%nonassoc UMINUS NOT
 
 %%
 
@@ -79,83 +88,112 @@ Statement: /* nothing */
 		 | Expr ";"
 		 | Scope
 		 | Assign ";"
-		 | Cond_Stm
-		 | Std_Func ";"
+		 | If_Stm
+		 | Print ";"	{ drv.scopes[cur_scope_id].push_back($$); }
 		 ;
 
-Scope: StartScope Statements EndScope
-     | StartScope EndScope
-     ;
+Scope: 	StartScope Statements EndScope
+		{
+			$$ = std::make_unique<AST::Scope>(drv.scopes[cur_scope_id]);
+		};
 
 StartScope: "{"
 			{
 				++drv.cur_scope_id;
-				drv.var_table.push_back(Driver::Variables{});
+				drv.scopes.push_back(AST::Scope{});
 			};
 
 EndScope: 	"}"
 			{
 				--drv.cur_scope_id;
-				drv.var_table.push_back(Driver::Variables{});
+				drv.scopes.pop_back();
 			};
 
-Cond_Stm: 	IF "(" Expr ")" Statement { std::cout << "Ignoring Cond_Stm\n"; };
+If_Stm: 	IF "(" Expr ")" Statement
+			{
+				$$ = std::make_unique<AST::IfNode>(std::move($3), std::move($5));
+			};
 
 Assign: ID "=" Expr
 		{
-			MSG("Checking if assigned variable is already initialized\n");
-
-			size_t scope_id = 0;
-
-			while (scope_id != drv.cur_scope_id)
-			{
-				if (drv.var_table[scope_id].contains($1))
-				{
-					LOG("{} alredy initialized\n", $1);
-					break;
-				}
-				++scope_id;
-			}
-
-			drv.var_table[scope_id][$1] = $3;
-
-			$$ = $3;
+			$$ = std::make_unique<AST::AssignNode>(std::move($1), std::move($3));
 		};
 
-Std_Func: "print" Expr { drv.out << $2; }
+Print: "print" Expr { $$ = std::make_unique<AST::PrintNode>(std::move(Expr)); }
 
 
-Expr: 	Expr "+" Expr			{ $$ = $1 + $3; }
-   	| 	Expr "-" Expr			{ $$ = $1 - $3; }
-   	| 	Expr "*" Expr			{ $$ = $1 * $3; }
-  	| 	Expr "/" Expr			{ $$ = $1 / $3; }
-	|	Expr ">" Expr			{ $$ = $1 > $3; }
-	|	Expr "<" Expr			{ $$ = $1 < $3; }
-	|	Expr ">=" Expr			{ $$ = $1 >= $3; }
-	|	Expr "<=" Expr			{ $$ = $1 <= $3; }
-	|	Expr "==" Expr			{ $$ = $1 == $3; }
-	|	Expr "!=" Expr			{ $$ = $1 != $3; }
-  	| 	"(" Expr ")"			{ $$ = $2; }
-  	| 	"-" Expr %prec UMINUS 	{ $$ = - $2; }
-  	| 	NUMBER					{ $$ = $1; }
-	| 	"?"						{ std::cin >> $$; }
-  	| 	ID
+Expr: 	Expr "+" Expr
 		{
-			for (int scope_id = static_cast<int>(drv.cur_scope_id); scope_id >= 0; --scope_id)
-			{
-				auto iter = drv.var_table[scope_id].find($1);
-
-				if (iter == drv.var_table[scope_id].end())
-					if (scope_id == 0)
-						throw yy::parser::syntax_error(drv.location, "Unknown identifier\n");
-					else continue;
-				else
-				{
-					$$ = iter->second;
-					break;
-				}
-			}
-		};
+			$$ = std::make_unique<AST::BinaryOpNode>(std::move($1),
+														AST::BinaryOp::ADD,
+														std::move($3));
+		}
+   	| 	Expr "-" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::SUB,
+														std::move($3));
+		}
+   	| 	Expr "*" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::MUL,
+														std::move($3));
+		}
+  	| 	Expr "/" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::DIV,
+														std::move($3));
+		}
+	|	Expr ">" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::GR,
+														std::move($3));
+		}
+	|	Expr "<" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::LS,
+														std::move($3));
+		}
+	|	Expr ">=" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::GR_EQ,
+														std::move($3));
+		}
+	|	Expr "<=" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::LS_EQ,
+														std::move($3));
+		}
+	|	Expr "==" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::EQ,
+														std::move($3));
+		}
+	|	Expr "!=" Expr
+		{
+			$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+														AST::BinaryOp::NOT_EQ,
+														std::move($3));
+		}
+  	| 	"(" Expr ")"			{ $$ = std::move($2); }
+  	| 	"-" Expr %prec UMINUS
+		{
+			$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NEG);
+		}
+	| 	"!" Expr %prec NOT
+		{
+			$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NOT);
+		}
+  	| 	NUMBER	{ $$ = std::make_unique<AST::ConstantNode>($1); }
+	| 	"?"		{ $$ = std::make_unique<AST::InNode>(); }
+  	| 	ID 		{ $$ = std::make_unique<AST::VariableNode>($1); };
 
 %%
 

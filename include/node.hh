@@ -1,7 +1,7 @@
 #ifndef NODE_HH
 #define NODE_HH
 
-#include "INode.hh"
+#include "inode.hh"
 #include <cmath>
 #include <cstddef>
 #include <unordered_map>
@@ -21,8 +21,6 @@ private:
     std::unordered_map<std::string, int> variableTable_;
 
 public:
-    Scope(std::unique_ptr<IScope>&& parent)
-    :   IScope(0), parent_(std::move(parent)) {}
     Scope(ObserverPtr<IScope> parent)
     :   IScope(0), parent_(parent) {}
 

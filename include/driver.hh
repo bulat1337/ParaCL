@@ -7,6 +7,7 @@
 #include <ostream>
 
 #include "parser.hh"
+#include "ast.hh"
 
 extern int yy_flex_debug;
 extern int yydebug;
@@ -20,15 +21,18 @@ YY_DECL;
 
 class Driver final
 {
-  public:
+  public: /* usings */
+	using Variables = std::unordered_map<std::string, int>;
+
+  public: /* members */
 	std::string 	file;
 	yy::location 	location;
 	std::ostream& 	out;
 	size_t 			cur_scope_id = 0;
-
-	using Variables = std::unordered_map<std::string, int>;
-
+	std::vector<AST::Scope> scopes;
 	std::vector<Variables> var_table;
+
+
 
   public:
 
@@ -36,6 +40,7 @@ class Driver final
 		out(_out)
 	{
 		var_table.push_back(Variables{});
+		scopes.push_back(AST::Scope{});
 	}
 
 	int parse(const std::string &f)
@@ -52,11 +57,11 @@ class Driver final
     	parse.set_debug_level(YYDEBUG);
 		#endif
 
-		int res = parse();
+		int status = parse();
 
 		scan_end();
 
-		return res;
+		return status;
 	}
 
 	void scan_begin()

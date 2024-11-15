@@ -6,9 +6,9 @@
 #include <string>
 #include <unordered_map>
 
-namespace AST 
+namespace AST
 {
- 
+
 class INode;
 
 using INodePtr = std::unique_ptr<INode>;
@@ -45,8 +45,8 @@ class INode
 protected:
     size_t childCount_;
 
-    INode(size_t childCount = 0) 
-    :   childCount_(childCount) {} 
+    INode(size_t childCount = 0)
+    :   childCount_(childCount) {}
 
 public:
     virtual const INode& getChild(size_t i) const = 0;
@@ -79,4 +79,3 @@ public:
 } // namespace AST
 
 #endif // ! INODE_HH
-
