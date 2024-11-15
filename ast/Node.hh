@@ -16,15 +16,17 @@ class Scope final : public IScope
 private:
     std::vector<INodePtr> nodes_;
 
-    std::unique_ptr<IScope> parent_;
+    ObserverPtr<IScope> parent_;
 
     std::unordered_map<std::string, int> variableTable_;
 
 public:
     Scope(std::unique_ptr<IScope>&& parent)
     :   IScope(0), parent_(std::move(parent)) {}
+    Scope(ObserverPtr<IScope> parent)
+    :   IScope(0), parent_(parent) {}
 
-    const std::unique_ptr<IScope>& resetScope() override
+    const ObserverPtr<IScope>& resetScope() override
     {
         return parent_;
     }
@@ -59,9 +61,9 @@ public:
         // throw std::runtime_error("Variable not found: " + name);
     }
 
-    int eval() const override;
+    int eval() const override {}
 
-    ~Scope() override = default;
+   ~Scope() override = default;
 };
 
 class ConstantNode final : public INode
@@ -78,7 +80,7 @@ public:
         return val_;
     }
 
-    const INode& getChild(size_t i) const override;
+    const INode& getChild(size_t i) const override {}
 
     ~ConstantNode() override = default;
 };
@@ -102,7 +104,7 @@ public:
         return varIt_->second;
     }
 
-    const INode& getChild(size_t i) const override;
+    const INode& getChild(size_t i) const override {}
 
     ~VariableNode() override = default;
 };

@@ -13,6 +13,9 @@ class INode;
 
 using INodePtr = std::unique_ptr<INode>;
 using VarIterator = std::unordered_map<std::string, int>::iterator;
+template<class T>
+using ObserverPtr = T*;
+
 
 enum class BinaryOp
 {
@@ -65,7 +68,7 @@ protected:
     :   INode(childCount) {}
 
 public:
-    virtual const std::unique_ptr<IScope>& resetScope()               = 0;
+    virtual const ObserverPtr<IScope>& resetScope()               = 0;
     virtual VarIterator getVariableIterator (const std::string& name) = 0;
     virtual void insertVariable (std::string name, int initialValue)  = 0;
     virtual void insertNode (INodePtr&& node)                    = 0;

@@ -7,8 +7,6 @@ set(TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 add_definitions(-DTEST_DATA_DIR=\"${TEST_DATA_DIR}\")
 
 find_package(GTest REQUIRED)
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
 
 set(RELEASE_COMPILE_OPTIONS
 	-O2
@@ -129,6 +127,7 @@ target_include_directories(unit_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_BINARY_DIR}/parser
 	${CMAKE_SOURCE_DIR}/utils/include
+    ${CMAKE_SOURCE_DIR}/ast
 )
 
 if(ENABLE_BD_TESTS)
