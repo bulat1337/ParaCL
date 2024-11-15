@@ -10,7 +10,7 @@
 namespace AST 
 {
 
-class ASTtree final
+class AST final
 {
 private:
     using VarTable = std::unordered_map<std::string, int>;
@@ -20,10 +20,12 @@ private:
 
     std::vector<VarTable> VarTables_;
 
+    detail::Context ctx;
+
 public:
     int eval()
     {
-        return globalScope_->eval();
+        return globalScope_->eval(ctx);
     }
 };
 

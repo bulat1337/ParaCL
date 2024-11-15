@@ -34,7 +34,7 @@ private:
 public:
     int eval(detail::Context& ctx) const override 
     {
-        ctx.curScope_++;
+        ++ctx.curScope_;
 
         ctx.varTables_.push_back(detail::Context::VarTable());
 
@@ -46,6 +46,11 @@ public:
         ctx.varTables_.pop_back();
 
         ctx.curScope_--;
+    }
+
+    void pushChild(StmtPtr&& stmt)
+    {
+        children_.push_back(std::move(stmt));
     }
 };
 
@@ -109,8 +114,8 @@ public:
 
     int eval(detail::Context& ctx) const override
     {
-        int leftVal = left_->eval();
-        int rightVal = right_->eval();
+        int leftVal = left_->eval(ctx);
+        int rightVal = right_->eval(ctx);
 
         switch (op_)
         {
@@ -174,7 +179,7 @@ public:
 
     int eval(detail::Context& ctx) const override
     {
-        int operandVal = operand_->eval();
+        int operandVal = operand_->eval(ctx);
 
         switch (op_)
         {
@@ -234,9 +239,9 @@ public:
     {
         int result = 0;
 
-        while (cond_->eval())
+        while (cond_->eval(ctx))
         {
-            result = scope_->eval();
+            result = scope_->eval(ctx);
         }
 
         return result;
@@ -289,7 +294,6 @@ public:
         return value;
     }
 };
-
 
 class InNode final : public StatementNode
 {

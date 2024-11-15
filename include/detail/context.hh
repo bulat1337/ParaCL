@@ -20,7 +20,7 @@ public:
 
 public:
     std::vector<VarTable> varTables_;
-    int32_t curScope_;
+    int32_t curScope_ = 0;
 
 public:
 
