@@ -28,19 +28,16 @@ class Driver final
 	std::string 	file;
 	yy::location 	location;
 	std::ostream& 	out;
-	size_t 			cur_scope_id = 0;
-	std::vector<AST::Scope> scopes;
-	std::vector<Variables> var_table;
-
-
+	AST::AST		ast;
+	std::vector<std::vector<AST::StmtPtr>> stm_table;
+	size_t cur_scope_id = 0;
 
   public:
 
   	Driver(std::ostream& _out = std::cout):
 		out(_out)
 	{
-		var_table.push_back(Variables{});
-		scopes.push_back(AST::Scope{});
+		
 	}
 
 	int parse(const std::string &f)

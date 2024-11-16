@@ -29,23 +29,34 @@ using CondStmtPtr = std::unique_ptr<ConditionalStatementNode>;
 class ScopeNode final : public StatementNode
 {
 private:
-    std::vector<StatementNode> children_;
+    std::vector<StmtPtr> children_;
 
 public:
-    int eval(detail::Context& ctx) const override 
+	ScopeNode(std::vector<StmtPtr>&& stms)
+	{
+		for (auto& stm : stms)
+		{
+			children_.push_back(std::move(stm));
+		}
+	}
+
+	// TODO:: Rework later
+	int eval([[maybe_unused]]detail::Context& ctx) const override { return 0; };
+
+    void evaluate(detail::Context& ctx) const
     {
         ++ctx.curScope_;
 
         ctx.varTables_.push_back(detail::Context::VarTable());
 
-        for (auto child : children_)
+        for (const auto& child : children_)
         {
-            child.eval(ctx);
+            child->eval(ctx);
         }
 
         ctx.varTables_.pop_back();
 
-        ctx.curScope_--;
+        --ctx.curScope_;
     }
 
     void pushChild(StmtPtr&& stmt)
@@ -53,6 +64,8 @@ public:
         children_.push_back(std::move(stmt));
     }
 };
+
+using ScopePtr = std::unique_ptr<ScopeNode>;
 
 class ConstantNode final : public ExpressionNode
 {
@@ -63,18 +76,20 @@ public:
     ConstantNode(int val)
     :   val_(val) {}
 
-    int eval(detail::Context& ctx) const override
+    int eval([[maybe_unused]]detail::Context& ctx) const override
     {
         return val_;
     }
 };
 
-class VariableNode final : public INode
+class VariableNode final : public ExpressionNode
 {
 private:
     std::string name_;
 
 public:
+	VariableNode(const std::string& name): name_(name) {}
+
     const std::string& getName() const
     {
         return name_;
@@ -90,12 +105,9 @@ public:
             {
                 return it->second;
             }
-            
-            if (scopeId == 0)
-            {
-                throw std::logic_error("Undeclared variable");
-            }
         }
+
+		throw std::logic_error("Undeclared variable");
     }
 };
 
@@ -253,23 +265,17 @@ class IfNode final : public ConditionalStatementNode
 private:
     ExprPtr cond_;
     StmtPtr action_;
-    StmtPtr altAction_;
 
 public:
-    IfNode(ExprPtr&& cond, StmtPtr&& action, StmtPtr&& altAction)
+    IfNode(ExprPtr&& cond, StmtPtr&& action)
     :   cond_(std::move(cond)),
-        action_(std::move(action)),
-        altAction_(std::move(altAction)) {}
+        action_(std::move(action)) {}
 
     int eval(detail::Context& ctx) const override
     {
         if (cond_->eval(ctx))
         {
             return action_->eval(ctx);
-        }
-        else
-        {
-            return altAction_->eval(ctx);
         }
 
         return 0;
@@ -295,12 +301,12 @@ public:
     }
 };
 
-class InNode final : public StatementNode
+class InNode final : public ExpressionNode
 {
 public:
     InNode() = default;
 
-    int eval(detail::Context& ctx) const override
+    int eval([[maybe_unused]] detail::Context& ctx) const override
     {
         int value = 0;
 

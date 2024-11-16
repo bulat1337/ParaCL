@@ -14,17 +14,21 @@
 
 %code requires
 {
-	#include <string>
 	class Driver;
+
+	#include <string>
+	#include "node.hh"
+	#include "ast.hh"
 }
 
 %param { Driver& drv }
 
 %code
 {
+	#include <memory>
+
 	#include "log.h"
 	#include "driver.hh"
-	#include "node.hh"
 }
 
 %define api.token.prefix {TOK_}
@@ -52,18 +56,18 @@
 	NOT			"!"
 ;
 
-%token <std::unique_ptr<AST::VariableNode>> ID		"identifier"
-%token <std::unique_ptr<AST::ConstantNode>> NUMBER 	"number"
+%token <std::string>	ID		"identifier"
+%token <int> 			NUMBER 	"number"
 
 // ----- Statement derived -----
-// NOTE: No ExprNode in AST yet
-%nterm <std::unique_ptr<AST::ExprNode> 			Expr
-%nterm <std::unique_ptr<AST::UnaryOpNode> 		UnaryOp
-%nterm <std::unique_ptr<AST::BinaryOpNode> 		BinaryOp
+%nterm <std::unique_ptr<AST::ExpressionNode>> 	Expr
+%nterm <std::unique_ptr<AST::UnaryOpNode>> 		UnaryOp
+%nterm <std::unique_ptr<AST::BinaryOpNode>> 	BinaryOp
 %nterm <std::unique_ptr<AST::AssignNode>> 		Assign
 %nterm <std::unique_ptr<AST::ScopeNode>> 		Scope
 %nterm <std::unique_ptr<AST::PrintNode>> 		Print
 %nterm <std::unique_ptr<AST::IfNode>> 			If_Stm
+%nterm <std::unique_ptr<AST::VariableNode>> 	Variable
 
 %nterm <std::unique_ptr<AST::StatementNode>>	Statement
 
@@ -79,36 +83,39 @@
 %%
 
 Program: /* nothing */
-	   | Statements YYEOF
+	   | 	Statements YYEOF
+	   		{
+				drv.ast.globalScope =
+					std::make_unique<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
+			}
 	   ;
 
-Statements: Statement
-		  | Statements Statement
+Statements: Statement				{ drv.stm_table[drv.cur_scope_id].push_back(std::move($1)); }
+		  | Statements Statement	{ drv.stm_table[drv.cur_scope_id].push_back(std::move($2)); }
 		  ;
 
-Statement: /* nothing */
-		 | Expr ";"
+Statement: Expr ";"
 		 | Scope
 		 | Assign ";"
 		 | If_Stm
-		 | Print ";"	{ drv.scopes[cur_scope_id].push_back($$); }
+		 | Print ";"	{ $$ = std::move($1); }
 		 ;
 
 Scope: 	StartScope Statements EndScope
 		{
-			$$ = std::make_unique<AST::ScopeNode>(drv.scopes[cur_scope_id]);
+			$$ = std::make_unique<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
 		};
 
 StartScope: "{"
 			{
 				++drv.cur_scope_id;
-				drv.scopes.push_back(AST::ScopeNode{});
+				drv.stm_table.resize(drv.stm_table.size() + 1);
 			};
 
 EndScope: 	"}"
 			{
 				--drv.cur_scope_id;
-				drv.scopes.pop_back();
+				drv.stm_table.pop_back();
 			};
 
 If_Stm: 	IF "(" Expr ")" Statement
@@ -116,20 +123,20 @@ If_Stm: 	IF "(" Expr ")" Statement
 				$$ = std::make_unique<AST::IfNode>(std::move($3), std::move($5));
 			};
 
-Assign: ID "=" Expr
+Assign: Variable "=" Expr
 		{
 			$$ = std::make_unique<AST::AssignNode>(std::move($1), std::move($3));
 		};
 
-Print: "print" Expr { $$ = std::make_unique<AST::PrintNode>(std::move(Expr)); }
+Print: "print" Expr { $$ = std::make_unique<AST::PrintNode>(std::move($2)); }
 
 
-Expr:	BinaryOp		{ $$ = std::make_unique<AST::BinaryOp>($1); }
-	|	UnaryOp			{ $$ = std::make_unique<AST::UnaryOp>($1); }
+Expr:	BinaryOp		{ $$ = std::move($1); }
+	|	UnaryOp			{ $$ = std::move($1); }
   	| 	"(" Expr ")"	{ $$ = std::move($2); }
   	| 	NUMBER			{ $$ = std::make_unique<AST::ConstantNode>($1); }
 	| 	"?"				{ $$ = std::make_unique<AST::InNode>(); }
-  	| 	ID 				{ $$ = std::make_unique<AST::VariableNode>($1); }
+  	| 	Variable 		{ $$ = std::move($1); }
 	;
 
 BinaryOp: 	Expr "+" Expr
@@ -204,6 +211,8 @@ UnaryOp	: 	"-" Expr %prec UMINUS
 				$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NOT);
 			}
 	 	;
+
+Variable: ID { $$ = std::make_unique<AST::VariableNode>(std::string($1)); };
 
 %%
 
