@@ -17,5 +17,9 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; ++i)
         status = drv.parse(argv[i]);
 
+	LOG("global statements amount: {}\n", drv.ast.globalScope->nstms());
+
+	drv.ast.eval();
+
     return status;
 }

@@ -2,6 +2,7 @@
 #define AST_HH
 
 #include "node.hh"
+#include "log.h"
 
 #include <memory>
 #include <string>
@@ -28,6 +29,7 @@ private:
 public:
     void eval()
     {
+		MSG("Evaluating global scope\n");
         globalScope->evaluate(ctx);
     }
 };

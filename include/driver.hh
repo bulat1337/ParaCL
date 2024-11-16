@@ -37,7 +37,7 @@ class Driver final
   	Driver(std::ostream& _out = std::cout):
 		out(_out)
 	{
-		
+		stm_table.push_back(std::vector<AST::StmtPtr>());
 	}
 
 	int parse(const std::string &f)

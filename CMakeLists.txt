@@ -7,6 +7,9 @@ enable_testing()
 option(ENABLE_LOGGING "Enable logging" OFF)
 set(ENABLE_LOGGING ${ENABLE_LOGGING} CACHE BOOL "Enable logging" FORCE)
 
+option(ENABLE_GRAMMAR_LOG "Enable logging" OFF)
+set(ENABLE_GRAMMAR_LOG ${ENABLE_GRAMMAR_LOG} CACHE BOOL "Enable logging" FORCE)
+
 option(ENABLE_BD_TESTS "Enables big data tests" OFF)
 set(ENABLE_BD_TESTS ${ENABLE_BD_TESTS} CACHE BOOL "Enables big data tests" FORCE)
 
@@ -123,14 +126,17 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(paracl.x PRIVATE DEBUG)
 
-	target_compile_definitions(paracl.x PRIVATE YY_FLEX_DEBUG=1 YYDEBUG=1)
-
     target_compile_options(paracl.x PRIVATE ${DEBUG_COMPILE_OPTIONS})
     target_link_options(paracl.x PRIVATE
         -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
     )
 else()
     target_compile_options(paracl.x PRIVATE ${RELEASE_COMPILE_OPTIONS})
+endif()
+
+if(ENABLE_GRAMMAR_LOG)
+	target_compile_definitions(paracl.x PRIVATE YY_FLEX_DEBUG=1 YYDEBUG=1)
+else()
 	target_compile_definitions(paracl.x PRIVATE YY_FLEX_DEBUG=0 YYDEBUG=0)
 endif()
 

@@ -4,6 +4,8 @@
 #include "detail/context.hh"
 #include "detail/inode.hh"
 #include "inode.hh"
+#include "log.h"
+
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -36,6 +38,11 @@ public:
 	{
 		for (auto& stm : stms)
 		{
+			std::clog << stm.get() << '\n';
+		}
+
+		for (auto& stm : stms)
+		{
 			children_.push_back(std::move(stm));
 		}
 	}
@@ -45,9 +52,19 @@ public:
 
     void evaluate(detail::Context& ctx) const
     {
+		MSG("Evaluating scope\n");
+
         ++ctx.curScope_;
 
         ctx.varTables_.push_back(detail::Context::VarTable());
+
+		LOG("ctx.curScope_ = {}\n", ctx.curScope_);
+		LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
+
+		for (const auto& child : children_)
+        {
+            std::clog << child.get() << '\n';
+        }
 
         for (const auto& child : children_)
         {
@@ -57,12 +74,17 @@ public:
         ctx.varTables_.pop_back();
 
         --ctx.curScope_;
+
+		LOG("ctx.curScope_ = {}\n", ctx.curScope_);
+		LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
     }
 
     void pushChild(StmtPtr&& stmt)
     {
         children_.push_back(std::move(stmt));
     }
+
+	size_t nstms() const { return children_.size(); }
 };
 
 using ScopePtr = std::unique_ptr<ScopeNode>;
@@ -78,6 +100,7 @@ public:
 
     int eval([[maybe_unused]]detail::Context& ctx) const override
     {
+		LOG("Evaluating constant: {}\n", val_);
         return val_;
     }
 };
@@ -97,6 +120,8 @@ public:
 
     int eval(detail::Context& ctx) const override
     {
+		LOG("Evaluating variable: {}\n", name_);
+
         for (int32_t scopeId = ctx.curScope_; scopeId >= 0; --scopeId)
         {
             auto it = ctx.varTables_[scopeId].find(name_);
@@ -221,6 +246,8 @@ public:
 
     int eval(detail::Context& ctx) const override
     {
+		MSG("Evaluating assignment\n");
+
         std::string destName = dest_->getName();
 
         int value = expr_->eval(ctx);
@@ -293,6 +320,8 @@ public:
 
     int eval(detail::Context& ctx) const override
     {
+		MSG("Evaluation print\n");
+
         int value = expr_->eval(ctx);
 
         std::cout << value << std::endl;
