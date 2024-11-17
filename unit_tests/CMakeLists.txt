@@ -107,14 +107,17 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	target_compile_definitions(unit_tests PRIVATE DEBUG)
 	target_compile_options(unit_tests PRIVATE ${DEBUG_COMPILE_OPTIONS})
 
-	target_compile_definitions(unit_tests PRIVATE YY_FLEX_DEBUG=1 YYDEBUG=1)
-
 	target_link_options(unit_tests PRIVATE
 		-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 	)
 else()
-	target_compile_definitions(unit_tests PRIVATE YY_FLEX_DEBUG=0 YYDEBUG=0)
 	target_compile_options(unit_tests PRIVATE ${RELEASE_COMPILE_OPTIONS})
+endif()
+
+if(ENABLE_GRAMMAR_LOG)
+	target_compile_definitions(unit_tests PRIVATE YY_FLEX_DEBUG=1 YYDEBUG=1)
+else()
+	target_compile_definitions(unit_tests PRIVATE YY_FLEX_DEBUG=0 YYDEBUG=0)
 endif()
 
 target_link_libraries(unit_tests
@@ -125,6 +128,7 @@ target_link_libraries(unit_tests
 target_include_directories(unit_tests PRIVATE
 	${CMAKE_SOURCE_DIR}/unit_tests/test_utils/include
     ${CMAKE_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/include/detail
     ${CMAKE_BINARY_DIR}/parser
 	${CMAKE_SOURCE_DIR}/utils/include
 )

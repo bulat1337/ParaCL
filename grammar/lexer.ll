@@ -37,26 +37,27 @@ BLANK 	[ \t\r]
 {BLANK}+	loc.step ();
 \n+			loc.lines (yyleng); loc.step ();
 
-"-"			return yy::parser::make_MINUS(loc);
-"+"			return yy::parser::make_PLUS(loc);
-"*"			return yy::parser::make_STAR(loc);
-"/"			return yy::parser::make_SLASH(loc);
-"("			return yy::parser::make_LPAREN(loc);
-")"			return yy::parser::make_RPAREN(loc);
-"="			return yy::parser::make_ASSIGN(loc);
-"?"			return yy::parser::make_READ(loc);
-"print"		return yy::parser::make_PRINT(loc);
-"{"			return yy::parser::make_LCPAREN(loc);
-"}"			return yy::parser::make_RCPAREN(loc);
-";"			return yy::parser::make_SEMIC(loc);
-"if"		return yy::parser::make_IF(loc);
-"while"		return yy::parser::make_WHILE(loc);
-">"			return yy::parser::make_GREATER(loc);
-"<"			return yy::parser::make_LESS(loc);
-">="		return yy::parser::make_GREATER_E(loc);
-"<="		return yy::parser::make_LESS_E(loc);
-"=="		return yy::parser::make_EQUAL(loc);
-"!="		return yy::parser::make_NOT_EQUAL(loc);
+"-"			return yy::parser::make_MINUS		(loc);
+"+"			return yy::parser::make_PLUS		(loc);
+"*"			return yy::parser::make_STAR		(loc);
+"/"			return yy::parser::make_SLASH		(loc);
+"("			return yy::parser::make_LPAREN		(loc);
+")"			return yy::parser::make_RPAREN		(loc);
+"="			return yy::parser::make_ASSIGN		(loc);
+"?"			return yy::parser::make_READ		(loc);
+"print"		return yy::parser::make_PRINT		(loc);
+"{"			return yy::parser::make_LCPAREN		(loc);
+"}"			return yy::parser::make_RCPAREN		(loc);
+";"			return yy::parser::make_SEMIC(		loc);
+"if"		return yy::parser::make_IF			(loc);
+"while"		return yy::parser::make_WHILE		(loc);
+">"			return yy::parser::make_GREATER		(loc);
+"<"			return yy::parser::make_LESS		(loc);
+">="		return yy::parser::make_GREATER_E	(loc);
+"<="		return yy::parser::make_LESS_E		(loc);
+"=="		return yy::parser::make_EQUAL		(loc);
+"!="		return yy::parser::make_NOT_EQUAL	(loc);
+"!"			return yy::parser::make_NOT			(loc);
 
 
 {INT}		return make_NUMBER (yytext, loc);

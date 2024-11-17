@@ -7,6 +7,7 @@
 #include <ostream>
 
 #include "parser.hh"
+#include "ast.hh"
 
 extern int yy_flex_debug;
 extern int yydebug;
@@ -20,22 +21,22 @@ YY_DECL;
 
 class Driver final
 {
-  public:
-	std::string 	file;
-	yy::location 	location;
-	std::ostream& 	out;
-	size_t 			cur_scope_id = 0;
-
+  public: /* usings */
 	using Variables = std::unordered_map<std::string, int>;
 
-	std::vector<Variables> var_table;
+  public: /* members */
+	std::string 	file;
+	yy::location 	location;
+	AST::AST		ast;
+	std::vector<std::vector<AST::StmtPtr>> stm_table;
+	size_t cur_scope_id = 0;
 
   public:
 
-  	Driver(std::ostream& _out = std::cout):
-		out(_out)
+  	Driver(std::ostream& out = std::cout):
+		ast(out)
 	{
-		var_table.push_back(Variables{});
+		stm_table.push_back(std::vector<AST::StmtPtr>());
 	}
 
 	int parse(const std::string &f)
@@ -52,11 +53,11 @@ class Driver final
     	parse.set_debug_level(YYDEBUG);
 		#endif
 
-		int res = parse();
+		int status = parse();
 
 		scan_end();
 
-		return res;
+		return status;
 	}
 
 	void scan_begin()
@@ -76,4 +77,4 @@ class Driver final
 		fclose (yyin);
 	}
 };
-#endif // ! DRIVER_HH
+#endif // DRIVER_HH
