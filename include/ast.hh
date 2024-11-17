@@ -30,7 +30,7 @@ public:
     void eval()
     {
 		MSG("Evaluating global scope\n");
-        globalScope->evaluate(ctx);
+        globalScope->eval(ctx);
     }
 };
 

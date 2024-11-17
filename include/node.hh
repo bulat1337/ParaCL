@@ -38,19 +38,11 @@ public:
 	{
 		for (auto& stm : stms)
 		{
-			std::clog << stm.get() << '\n';
-		}
-
-		for (auto& stm : stms)
-		{
 			children_.push_back(std::move(stm));
 		}
 	}
 
-	// TODO:: Rework later
-	int eval([[maybe_unused]]detail::Context& ctx) const override { return 0; };
-
-    void evaluate(detail::Context& ctx) const
+    int eval(detail::Context& ctx) const override
     {
 		MSG("Evaluating scope\n");
 
@@ -61,13 +53,15 @@ public:
 		LOG("ctx.curScope_ = {}\n", ctx.curScope_);
 		LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
 
+		MSG("Scopes children:\n");
 		for (const auto& child : children_)
         {
-            std::clog << child.get() << '\n';
+			LOG("{}\n", static_cast<const void*>(child.get()));
         }
 
         for (const auto& child : children_)
         {
+			LOG("Evaluating {}\n", static_cast<const void*>(child.get()));
             child->eval(ctx);
         }
 
@@ -77,6 +71,9 @@ public:
 
 		LOG("ctx.curScope_ = {}\n", ctx.curScope_);
 		LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
+
+		// TODO: usless return value. Rework later.
+		return 0;
     }
 
     void pushChild(StmtPtr&& stmt)
@@ -250,12 +247,17 @@ public:
 
         std::string destName = dest_->getName();
 
+		MSG("Getting assigned value\n");
         int value = expr_->eval(ctx);
+		LOG("Assigned value is {}\n", value);
 
         int32_t scopeId = 0;
 
-        while (scopeId <= ctx.curScope_)
+        while (scopeId < ctx.curScope_)
+		{
             if (ctx.varTables_[scopeId].contains(destName)) break;
+			scopeId++;
+		}
 
         ctx.varTables_[scopeId][destName] = value;
 
@@ -324,7 +326,7 @@ public:
 
         int value = expr_->eval(ctx);
 
-        std::cout << value << std::endl;
+        std::cout << value;
 
         return value;
     }

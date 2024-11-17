@@ -85,7 +85,12 @@
 Program: /* nothing */
 	   | 	Statements YYEOF
 	   		{
-				MSG("Initialising global scope\n");
+				MSG("Initialising global scope with vector of statements:\n");
+				for (const auto& stm : drv.stm_table[drv.cur_scope_id])
+				{
+					LOG("{}\n", static_cast<const void*>(stm.get()));
+				}
+
 				drv.ast.globalScope =
 					std::make_unique<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
 			}
@@ -93,34 +98,74 @@ Program: /* nothing */
 
 Statements: Statement
 			{
-				MSG("Pushing statement:");
-				std::clog << $1.get() << '\n';
+				LOG("Pushing statement : {}\n",
+					static_cast<const void*>($1.get()));
+
 				drv.stm_table[drv.cur_scope_id].push_back(std::move($1));
 			}
 		  | Statements Statement
 		  	{
-				MSG("Pushing statement:");
-				std::clog << $2.get() << '\n';
+				LOG("Pushing statement : {}\n",
+					static_cast<const void*>($2.get()));
+
 				drv.stm_table[drv.cur_scope_id].push_back(std::move($2));
 			}
 		  ;
 
 Statement: 	Expr ";"
+			{
+				LOG("It's Expr. Moving from concrete rule: {}\n",
+					static_cast<const void*>($$.get()));
+
+				$$ = std::move($1);
+			}
 		 | 	Scope
+		 	{
+				LOG("It's Scope. Moving from concrete rule: {}\n",
+					static_cast<const void*>($$.get()));
+
+				$$ = std::move($1);
+			}
 		 | 	Assign ";"
+		 	{
+				LOG("It's Assign. Moving from concrete rule: {}\n",
+					static_cast<const void*>($$.get()));
+
+				$$ = std::move($1);
+			}
 		 | 	If_Stm
+		 	{
+				LOG("It's If_Stm. Moving from concrete rule: {}\n",
+					static_cast<const void*>($$.get()));
+
+				$$ = std::move($1);
+			}
 		 | 	Print ";"
 		 	{
-				MSG("It's statement. Moving from concrete rule: ");
+				LOG("It's Print. Moving from concrete rule: {}\n",
+					static_cast<const void*>($$.get()));
+
 				$$ = std::move($1);
-				std::clog << $$.get() << '\n';
 			}
 		 ;
 
 Scope: 	StartScope Statements EndScope
 		{
-			MSG("Initialising Scope\n");
+			MSG("Initialising scope with vector of statements:\n");
+			for (const auto& stm : drv.stm_table[drv.cur_scope_id])
+			{
+				LOG("{}\n", static_cast<const void*>(stm.get()));
+			}
+
 			$$ = std::make_unique<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
+
+			MSG("Scope end.\n");
+
+			--drv.cur_scope_id;
+
+			LOG("drv.cur_scope_id is now {}\n", drv.cur_scope_id);
+
+			drv.stm_table.pop_back();
 		};
 
 StartScope: "{"
@@ -136,13 +181,7 @@ StartScope: "{"
 
 EndScope: 	"}"
 			{
-				MSG("Scope end.\n");
 
-				--drv.cur_scope_id;
-
-				LOG("drv.cur_scope_id is now {}\n", drv.cur_scope_id);
-
-				drv.stm_table.pop_back();
 			};
 
 If_Stm: 	IF "(" Expr ")" Statement
@@ -153,9 +192,8 @@ If_Stm: 	IF "(" Expr ")" Statement
 
 Assign: Variable "=" Expr
 		{
-			MSG("Initialising assignment: ");
 			$$ = std::make_unique<AST::AssignNode>(std::move($1), std::move($3));
-			std::clog << $$ << '\n';
+			LOG("Initialising assignment: {}\n", static_cast<const void*>($$.get()));
 		};
 
 Print: 	"print" Expr
