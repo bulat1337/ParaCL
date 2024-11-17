@@ -58,6 +58,7 @@ BLANK 	[ \t\r]
 "=="		return yy::parser::make_EQUAL		(loc);
 "!="		return yy::parser::make_NOT_EQUAL	(loc);
 "!"			return yy::parser::make_NOT			(loc);
+"%"			return yy::parser::make_MOD			(loc);
 
 
 {INT}		return make_NUMBER (yytext, loc);

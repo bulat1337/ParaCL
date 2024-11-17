@@ -54,6 +54,7 @@
 	EQUAL		"=="
 	NOT_EQUAL	"!="
 	NOT			"!"
+	MOD			"%"
 ;
 
 %token <std::string>	ID		"identifier"
@@ -67,6 +68,7 @@
 %nterm <std::unique_ptr<AST::ScopeNode>> 		Scope
 %nterm <std::unique_ptr<AST::PrintNode>> 		Print
 %nterm <std::unique_ptr<AST::IfNode>> 			If_Stm
+%nterm <std::unique_ptr<AST::WhileNode>> 		While_Stm
 %nterm <std::unique_ptr<AST::VariableNode>> 	Variable
 
 %nterm <std::unique_ptr<AST::StatementNode>>	Statement
@@ -140,6 +142,14 @@ Statement: 	Expr ";"
 
 				$$ = std::move($1);
 			}
+		|
+			While_Stm
+			{
+				LOG("It's While_Stm. Moving from concrete rule: {}\n",
+					static_cast<const void*>($$.get()));
+
+				$$ = std::move($1);
+			}
 		 | 	Print ";"
 		 	{
 				LOG("It's Print. Moving from concrete rule: {}\n",
@@ -188,6 +198,12 @@ If_Stm: 	IF "(" Expr ")" Statement
 			{
 				MSG("Initialising if statement\n");
 				$$ = std::make_unique<AST::IfNode>(std::move($3), std::move($5));
+			};
+
+While_Stm:	WHILE "(" Expr ")" Statement
+			{
+				MSG("Initialising while statement\n");
+				$$ = std::make_unique<AST::WhileNode>(std::move($3), std::move($5));
 			};
 
 Assign: Variable "=" Expr
@@ -303,6 +319,13 @@ BinaryOp: 	Expr "+" Expr
 				MSG("Initialising NOT_EQ operation\n");
 				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
 															AST::BinaryOp::NOT_EQ,
+															std::move($3));
+			}
+		|	Expr "%" Expr
+			{
+				MSG("Initialising MOD operation\n");
+				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
+															AST::BinaryOp::MOD,
 															std::move($3));
 			}
 		;
