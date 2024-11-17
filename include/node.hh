@@ -376,6 +376,11 @@ public:
     ~InNode() = default;
 };
 
+class VoidNode final : public ExpressionNode
+{
+	int eval([[maybe_unused]] detail::Context& ctx) const override { return 0; }
+};
+
 } // namespace AST
 
 #endif // ! NODE_HH

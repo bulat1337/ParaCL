@@ -16,3 +16,5 @@ TEST(common, while_uminus_logical) { test_utils::run_test("/common/while_uminus_
 TEST(common, while_if_logical_mod) { test_utils::run_test("/common/while_if_logical_mod"); }
 
 TEST(common, expression_1) { test_utils::run_test("/common/expression_1"); }
+
+TEST(common, scopes) { test_utils::run_test("/common/scopes"); }

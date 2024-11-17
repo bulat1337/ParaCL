@@ -114,7 +114,12 @@ Statements: Statement
 			}
 		  ;
 
-Statement: 	Expr ";"
+Statement:	/* nothing */
+			{
+				MSG("Void statement\n");
+				$$ = std::make_unique<AST::VoidNode>();
+			}
+		 |	Expr ";"
 			{
 				LOG("It's Expr. Moving from concrete rule: {}\n",
 					static_cast<const void*>($$.get()));
