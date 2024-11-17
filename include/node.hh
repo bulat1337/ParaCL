@@ -357,8 +357,6 @@ public:
 class InNode final : public ExpressionNode
 {
 public:
-    InNode() = default;
-
     int eval([[maybe_unused]] detail::Context& ctx) const override
     {
         int value = 0;
@@ -372,8 +370,6 @@ public:
 
         return value;
     }
-
-    ~InNode() = default;
 };
 
 class VoidNode final : public ExpressionNode
