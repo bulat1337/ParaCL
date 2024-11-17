@@ -26,7 +26,11 @@ private:
 
     detail::Context ctx;
 
+
 public:
+	AST(std::ostream& out = std::cout):
+		ctx(out) {}
+
     void eval()
     {
 		MSG("Evaluating global scope\n");

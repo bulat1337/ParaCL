@@ -54,7 +54,7 @@ public:
 		LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
 
 		MSG("Scopes children:\n");
-		for (const auto& child : children_)
+		for ([[maybe_unused]]const auto& child : children_)
         {
 			LOG("{}\n", static_cast<const void*>(child.get()));
         }
@@ -326,7 +326,7 @@ public:
 
         int value = expr_->eval(ctx);
 
-        std::cout << value;
+        ctx.out << value;
 
         return value;
     }

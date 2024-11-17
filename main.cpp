@@ -1,7 +1,8 @@
-#include <string> // for basic_string
+#include <string>     // for basic_string
 
-#include "driver.hh" // for Driver
-#include "log.h"     // for LOG, MSG
+#include "ast.hh"     // for AST
+#include "driver.hh"  // for Driver
+#include "log.h"      // for LOG, MSG
 
 int main(int argc, char **argv)
 {
@@ -17,9 +18,9 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; ++i)
         status = drv.parse(argv[i]);
 
-	LOG("global statements amount: {}\n", drv.ast.globalScope->nstms());
+    LOG("global statements amount: {}\n", drv.ast.globalScope->nstms());
 
-	drv.ast.eval();
+    drv.ast.eval();
 
     return status;
 }
