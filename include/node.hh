@@ -125,6 +125,7 @@ public:
 
             if (it != ctx.varTables_[scopeId].end())
             {
+				LOG("It's {}\n", it->second);
                 return it->second;
             }
         }
@@ -148,55 +149,76 @@ public:
 
     int eval(detail::Context& ctx) const override
     {
+		MSG("Evaluating Binary Operation\n");
+
         int leftVal = left_->eval(ctx);
         int rightVal = right_->eval(ctx);
+
+		int result = 0;
 
         switch (op_)
         {
             case BinaryOp::ADD:
-                return leftVal + rightVal;
+                result = leftVal + rightVal;
+				break;
 
             case BinaryOp::SUB:
-                return leftVal - rightVal;
+                result = leftVal - rightVal;
+				break;
 
             case BinaryOp::MUL:
-                return leftVal * rightVal;
+                result = leftVal * rightVal;
+				break;
 
             case BinaryOp::DIV:
-                if (rightVal == 0) // TODO: error handle
-                return leftVal / rightVal;
+                if (rightVal == 0) { /* TODO: error handle */ }
+                result = leftVal / rightVal;
+				break;
 
             case BinaryOp::MOD:
-                return leftVal % rightVal;
+                result = leftVal % rightVal;
+				break;
 
             case BinaryOp::LS:
-                return leftVal < rightVal;
+                result = leftVal < rightVal;
+				break;
 
             case BinaryOp::GR:
-                return leftVal > rightVal;
+                result = leftVal > rightVal;
+				break;
 
             case BinaryOp::LS_EQ:
-                return leftVal <= rightVal;
+                result = leftVal <= rightVal;
+				break;
 
             case BinaryOp::GR_EQ:
-                return leftVal >= rightVal;
+                result = leftVal >= rightVal;
+				break;
 
             case BinaryOp::EQ:
-                return leftVal == rightVal;
+                result = leftVal == rightVal;
+				break;
 
             case BinaryOp::NOT_EQ:
-                return leftVal != rightVal;
+                result = leftVal != rightVal;
+				break;
 
             case BinaryOp::AND:
-                return leftVal && rightVal;
+                result = leftVal && rightVal;
+				break;
 
             case BinaryOp::OR:
-                return leftVal || rightVal;
+                result = leftVal || rightVal;
+				break;
 
             default:
-                return -1; // FIXME: remove this
+                result = -1; // FIXME: remove this
                 // TODO: handle error
         }
+
+		LOG("It's {}\n", result);
+
+		return result;
     }
 };
 
@@ -335,8 +357,6 @@ public:
 class InNode final : public ExpressionNode
 {
 public:
-    InNode() = default;
-
     int eval([[maybe_unused]] detail::Context& ctx) const override
     {
         int value = 0;
@@ -350,8 +370,11 @@ public:
 
         return value;
     }
+};
 
-    ~InNode() = default;
+class VoidNode final : public ExpressionNode
+{
+	int eval([[maybe_unused]] detail::Context& ctx) const override { return 0; }
 };
 
 } // namespace AST
