@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>  // for Test, TestInfo (ptr only), TEST
 #include <string>         // for basic_string
+#include "dsl.hh"
 
 #include "test_utils.h"   // for run_test
 
@@ -20,3 +21,17 @@ TEST(common, while_if_logical_mod) { test_utils::run_test("/common/while_if_logi
 TEST(common, expression_1) { test_utils::run_test("/common/expression_1"); }
 
 TEST(common, scopes) { test_utils::run_test("/common/scopes"); }
+
+TEST(NodeTest, CreateConstant) 
+{
+    auto constNode = CONST(42);
+    ASSERT_NE(constNode, nullptr);
+    EXPECT_EQ(constNode->getVal(), 42);
+}
+
+TEST(NodeTest, CreateVariable)
+{
+    auto varNode = VAR("x");
+    ASSERT_NE(varNode, nullptr);
+    EXPECT_EQ(varNode->getName(), "x");
+}

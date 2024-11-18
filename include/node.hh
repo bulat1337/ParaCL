@@ -101,6 +101,11 @@ public:
 		LOG("Evaluating constant: {}\n", val_);
         return val_;
     }
+
+    int getVal() const
+    {
+        return val_;
+    }
 };
 
 class VariableNode final : public ExpressionNode
