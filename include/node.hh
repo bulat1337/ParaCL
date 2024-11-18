@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -130,7 +131,7 @@ public:
             }
         }
 
-		throw std::logic_error("Undeclared variable");
+		throw std::runtime_error("Undeclared variable: " + name_ + "\n");
     }
 };
 
@@ -198,7 +199,7 @@ public:
             case BinaryOp::EQ:
                 result = leftVal == rightVal;
 				break;
-
+ 
             case BinaryOp::NOT_EQ:
                 result = leftVal != rightVal;
 				break;
@@ -212,8 +213,7 @@ public:
 				break;
 
             default:
-                result = -1; // FIXME: remove this
-                // TODO: handle error
+                throw std::runtime_error("Unknown binary operation"); 
         }
 
 		LOG("It's {}\n", result);
@@ -246,8 +246,7 @@ public:
                 return ! operandVal;
 
             default:
-                return -1; // FIXME: fixme
-                // TODO: error handle
+                throw std::runtime_error("Unknown unary operation");
         }
     }
 };
@@ -367,7 +366,7 @@ public:
 
         if (! std::cin.good())
         {
-            // TODO: error handle
+            throw std::runtime_error("Incorrect input");
         }
 
         return value;
