@@ -177,7 +177,7 @@ public:
 				break;
 
             case BinaryOp::DIV:
-                if (rightVal == 0) { /* TODO: error handle */ }
+                if (rightVal == 0) { throw std::runtime_error("Divide by zero"); }
                 result = leftVal / rightVal;
 				break;
 

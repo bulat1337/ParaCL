@@ -64,7 +64,7 @@ inline std::unique_ptr<ScopeNode> scope(std::vector<StmtPtr> statements)
 #define CONST(val) AST::constant(val);
 #define VAR(name) AST::variable(name);
 #define BINARY(lhs, op, rhs) AST::binary_op(std::move(lhs), op, std::move(rhs))
-#define UNARY(operand) AST::detail::unary_op(std::move(operand), op)
+#define UNARY(operand, op) AST::unary_op(std::move(operand), op)
 #define ASSIGN(var, expr) AST::assignment(std::move(var), std::move(expr))
 #define PRINT(expr) AST::print(std::move(expr))
 #define WHILE(cond, scope) AST::while_stmt(std::move(cond), std::move(body))
