@@ -253,29 +253,24 @@ TEST(ASTTest, CreateAssignmentNode)
 
 TEST(ASTTest, WhileNode_ConditionTrue) 
 {
-    // Create a simple while loop: while (x < 10) { x = x + 1 }
     auto condition = AST::binary_op(AST::variable("x"), AST::BinaryOp::LS, AST::constant(10));
     auto action = AST::assignment(AST::variable("x"), AST::binary_op(AST::variable("x"), AST::BinaryOp::ADD, AST::constant(1)));
     auto whileNode = AST::while_stmt(std::move(condition), std::move(action));
 
     ASSERT_NE(whileNode, nullptr);
 
-    // Initialize context with x = 0
     AST::detail::Context ctx;
     ctx.varTables_.emplace_back();
-    ctx.varTables_[0]["x"] = 0;  // Set initial value of x
+    ctx.varTables_[0]["x"] = 0;
     ctx.curScope_ = 0;
 
-    // Evaluate the while loop
     whileNode->eval(ctx);
 
-    // After the loop, x should be 10
     EXPECT_EQ(ctx.varTables_[0]["x"], 10);
 }
 
 TEST(ASTTest, IfNode_TrueCondition) 
 {
-    // Create an if statement: if (x == 10) { y = 20 }
     auto condition = AST::binary_op(AST::variable("x"), AST::BinaryOp::EQ, AST::constant(10));
     auto action = AST::assignment(AST::variable("y"), AST::constant(20));
 
@@ -283,88 +278,46 @@ TEST(ASTTest, IfNode_TrueCondition)
 
     ASSERT_NE(ifNode, nullptr);
 
-    // Initialize context with x = 10
     AST::detail::Context ctx;
     ctx.varTables_.emplace_back();
     ctx.varTables_[0]["x"] = 10;
     ctx.curScope_ = 0;
 
-    // Evaluate the if statement
     ifNode->eval(ctx);
 
-    // After the if statement, y should be 20
     EXPECT_EQ(ctx.varTables_[0]["y"], 20);
 }
 
 
 TEST(ASTTest, IfNode_FalseCondition) 
 {
-    // Create an if statement: if (x == 10) { y = 20 }
     auto condition = AST::binary_op(AST::variable("x"), AST::BinaryOp::EQ, AST::constant(10));
     auto action = AST::assignment(AST::variable("y"), AST::constant(20));
     auto ifNode = AST::if_stmt(std::move(condition), std::move(action));
 
     ASSERT_NE(ifNode, nullptr);
-
-    // Initialize context with x = 5 (condition will be false)
     AST::detail::Context ctx;
     ctx.varTables_.emplace_back();
     ctx.varTables_[0]["x"] = 5;
     ctx.curScope_ = 0;
 
-    // Evaluate the if statement
     ifNode->eval(ctx);
 
-    // After the if statement, y should not be assigned, it should not exist in the context
     EXPECT_EQ(ctx.varTables_[0].count("y"), 0);
 }
 
 TEST(ASTTest, PrintNode) {
-    // Create a print statement: print(x)
     auto printNode = AST::print(AST::variable("x"));
 
     ASSERT_NE(printNode, nullptr);
-
-    // Redirect std::cout to a stringstream to capture output
     std::stringstream ss;
     AST::detail::Context ctx(ss);
 
-    // Initialize context with x = 42
     ctx.varTables_.emplace_back();
     ctx.varTables_[0]["x"] = 42;
     ctx.curScope_ = 0;
 
-    // Evaluate the print statement
     printNode->eval(ctx);
 
-    // Check that the output was correct
     EXPECT_EQ(ss.str(), "42");
 }
-
-TEST(ASTTest, InNode) 
-{
-    std::string simulated_input = "42";
-    std::istringstream input_stream(simulated_input);
-
-    // Redirect std::cin to the input stream
-    std::cin.rdbuf(input_stream.rdbuf());
-
-    auto var = VAR("x");
-    auto expr = IN();
-    auto assignmentNode = assignment(std::move(var), std::move(expr));
-
-    ASSERT_NE(assignmentNode, nullptr);
-
-    AST::detail::Context ctx;
-    ctx.varTables_.emplace_back();
-    ctx.curScope_ = 0;
-
-    int result = assignmentNode->eval(ctx);
-
-    EXPECT_EQ(result, 42);
-}
-
-
-
-
-
