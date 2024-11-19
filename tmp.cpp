@@ -1,10 +1,10 @@
+#include <unordered_map>
 #include <iostream>
+#include <string>
 
 int main()
 {
-	if (!0 + 5 * 2) std::cout << "true" << '\n';
-
-
+	std::cout << std::hash<std::string>{}(std::string{"lol"}) << '\n';
 
 	return 0;
 }
