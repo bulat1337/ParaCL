@@ -27,23 +27,23 @@ TEST(common, scopes) { test_utils::run_test("/common/scopes"); }
 
 TEST(ASTTest, CreateConstant)
 {
-    auto constNode = CONST(42);
+    auto constNode = MAKE_CONST(42);
     ASSERT_NE(constNode, nullptr);
     EXPECT_EQ(constNode->getVal(), 42);
 }
 
 TEST(ASTTest, CreateVariable)
 {
-    auto varNode = VAR("x");
+    auto varNode = MAKE_VAR("x");
     ASSERT_NE(varNode, nullptr);
     EXPECT_EQ(varNode->getName(), "x");
 }
 
 TEST(ASTTest, CreateBinaryOpADD)
 {
-    auto lhs = CONST(1000);
-    auto rhs = CONST(7);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::ADD, std::move(rhs));
+    auto lhs = MAKE_CONST(1000);
+    auto rhs = MAKE_CONST(7);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::ADD, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -55,9 +55,9 @@ TEST(ASTTest, CreateBinaryOpADD)
 
 TEST(ASTTest, CreateBinaryOpSUB)
 {
-    auto lhs = CONST(1000);
-    auto rhs = CONST(7);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::SUB, std::move(rhs));
+    auto lhs = MAKE_CONST(1000);
+    auto rhs = MAKE_CONST(7);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::SUB, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -68,9 +68,9 @@ TEST(ASTTest, CreateBinaryOpSUB)
 
 TEST(ASTTest, CreateBinaryOpMUL)
 {
-    auto lhs = CONST(15);
-    auto rhs = CONST(3);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::MUL, std::move(rhs));
+    auto lhs = MAKE_CONST(15);
+    auto rhs = MAKE_CONST(3);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::MUL, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -81,9 +81,9 @@ TEST(ASTTest, CreateBinaryOpMUL)
 
 TEST(ASTTest, CreateBinaryOpDIV)
 {
-    auto lhs = CONST(42);
-    auto rhs = CONST(6);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::DIV, std::move(rhs));
+    auto lhs = MAKE_CONST(42);
+    auto rhs = MAKE_CONST(6);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::DIV, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -94,9 +94,9 @@ TEST(ASTTest, CreateBinaryOpDIV)
 
 TEST(ASTTest, CreateBinaryOpDIVByZero)
 {
-    auto lhs = CONST(42);
-    auto rhs = CONST(0);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::DIV, std::move(rhs));
+    auto lhs = MAKE_CONST(42);
+    auto rhs = MAKE_CONST(0);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::DIV, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -106,9 +106,9 @@ TEST(ASTTest, CreateBinaryOpDIVByZero)
 
 TEST(ASTTest, CreateBinaryOpMOD)
 {
-    auto lhs = CONST(10);
-    auto rhs = CONST(3);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::MOD, std::move(rhs));
+    auto lhs = MAKE_CONST(10);
+    auto rhs = MAKE_CONST(3);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::MOD, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -120,9 +120,9 @@ TEST(ASTTest, CreateBinaryOpMOD)
 
 TEST(ASTTest, CreateBinaryOpAND)
 {
-    auto lhs = CONST(1);
-    auto rhs = CONST(0);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::AND, std::move(rhs));
+    auto lhs = MAKE_CONST(1);
+    auto rhs = MAKE_CONST(0);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::AND, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -134,9 +134,9 @@ TEST(ASTTest, CreateBinaryOpAND)
 
 TEST(ASTTest, CreateBinaryOpOR)
 {
-    auto lhs = CONST(1);
-    auto rhs = CONST(0);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::OR, std::move(rhs));
+    auto lhs = MAKE_CONST(1);
+    auto rhs = MAKE_CONST(0);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::OR, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -147,9 +147,9 @@ TEST(ASTTest, CreateBinaryOpOR)
 
 TEST(ASTTest, CreateBinaryOpLESS)
 {
-    auto lhs = CONST(3);
-    auto rhs = CONST(7);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::LS, std::move(rhs));
+    auto lhs = MAKE_CONST(3);
+    auto rhs = MAKE_CONST(7);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::LS, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -160,9 +160,9 @@ TEST(ASTTest, CreateBinaryOpLESS)
 
 TEST(ASTTest, CreateBinaryOpLESSorEQUAL)
 {
-    auto lhs = CONST(3);
-    auto rhs = CONST(7);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::LS_EQ, std::move(rhs));
+    auto lhs = MAKE_CONST(3);
+    auto rhs = MAKE_CONST(7);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::LS_EQ, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -173,9 +173,9 @@ TEST(ASTTest, CreateBinaryOpLESSorEQUAL)
 
 TEST(ASTTest, CreateBinaryOpGREATER)
 {
-    auto lhs = CONST(10);
-    auto rhs = CONST(5);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::GR, std::move(rhs));
+    auto lhs = MAKE_CONST(10);
+    auto rhs = MAKE_CONST(5);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::GR, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -186,9 +186,9 @@ TEST(ASTTest, CreateBinaryOpGREATER)
 
 TEST(ASTTest, CreateBinaryOpGREATERorEQUAL)
 {
-    auto lhs = CONST(5);
-    auto rhs = CONST(5);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::GR_EQ, std::move(rhs));
+    auto lhs = MAKE_CONST(5);
+    auto rhs = MAKE_CONST(5);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::GR_EQ, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -199,9 +199,9 @@ TEST(ASTTest, CreateBinaryOpGREATERorEQUAL)
 
 TEST(ASTTest, CreateBinaryOpEQ)
 {
-    auto lhs = CONST(42);
-    auto rhs = CONST(42);
-    auto binOpNode = binary_op(std::move(lhs), AST::BinaryOp::EQ, std::move(rhs));
+    auto lhs = MAKE_CONST(42);
+    auto rhs = MAKE_CONST(42);
+    auto binOpNode = MAKE_BINARY(lhs, AST::BinaryOp::EQ, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -212,8 +212,8 @@ TEST(ASTTest, CreateBinaryOpEQ)
 
 TEST(ASTTest, CreateUnaryOpNEG)
 {
-    auto operand = CONST(-42);
-    auto unaryOpNode = unary_op(std::move(operand), AST::UnaryOp::NEG);
+    auto operand = MAKE_CONST(-42);
+    auto unaryOpNode = MAKE_UNARY(operand, AST::UnaryOp::NEG);
 
     ASSERT_NE(unaryOpNode, nullptr);
 
@@ -224,8 +224,8 @@ TEST(ASTTest, CreateUnaryOpNEG)
 
 TEST(ASTTest, CreateUnaryOpNOT)
 {
-    auto operand = CONST(0);
-    auto unaryOpNode = unary_op(std::move(operand), AST::UnaryOp::NOT);
+    auto operand = MAKE_CONST(0);
+    auto unaryOpNode = MAKE_UNARY(operand, AST::UnaryOp::NOT);
 
     ASSERT_NE(unaryOpNode, nullptr);
 
@@ -236,9 +236,9 @@ TEST(ASTTest, CreateUnaryOpNOT)
 
 TEST(ASTTest, CreateAssignmentNode)
 {
-    auto var = VAR("x");
-    auto expr = CONST(42);
-    auto assignmentNode = assignment(std::move(var), std::move(expr));
+    auto var = MAKE_VAR("x");
+    auto expr = MAKE_CONST(42);
+    auto assignmentNode = MAKE_ASSIGN(var, expr);
 
     ASSERT_NE(assignmentNode, nullptr);
 
@@ -253,9 +253,9 @@ TEST(ASTTest, CreateAssignmentNode)
 
 TEST(ASTTest, WhileNode_ConditionTrue)
 {
-    auto condition = AST::binary_op(AST::variable("x"), AST::BinaryOp::LS, AST::constant(10));
-    auto action = AST::assignment(AST::variable("x"), AST::binary_op(AST::variable("x"), AST::BinaryOp::ADD, AST::constant(1)));
-    auto whileNode = AST::while_stmt(std::move(condition), std::move(action));
+    auto condition = MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::LS, MAKE_CONST(10));
+    auto action = MAKE_ASSIGN(MAKE_VAR("x"), MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::ADD, MAKE_CONST(1)));
+    auto whileNode = MAKE_WHILE(condition, action);
 
     ASSERT_NE(whileNode, nullptr);
 
@@ -271,10 +271,10 @@ TEST(ASTTest, WhileNode_ConditionTrue)
 
 TEST(ASTTest, IfNode_TrueCondition)
 {
-    auto condition = AST::binary_op(AST::variable("x"), AST::BinaryOp::EQ, AST::constant(10));
-    auto action = AST::assignment(AST::variable("y"), AST::constant(20));
+    auto condition = MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::EQ, MAKE_CONST(10));
+    auto action = MAKE_ASSIGN(MAKE_VAR("y"), MAKE_CONST(20));
 
-    auto ifNode = AST::if_stmt(std::move(condition), std::move(action));
+    auto ifNode = MAKE_IF(condition, action);
 
     ASSERT_NE(ifNode, nullptr);
 
@@ -291,9 +291,9 @@ TEST(ASTTest, IfNode_TrueCondition)
 
 TEST(ASTTest, IfNode_FalseCondition)
 {
-    auto condition = AST::binary_op(AST::variable("x"), AST::BinaryOp::EQ, AST::constant(10));
-    auto action = AST::assignment(AST::variable("y"), AST::constant(20));
-    auto ifNode = AST::if_stmt(std::move(condition), std::move(action));
+    auto condition = MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::EQ, MAKE_CONST(10));
+    auto action = MAKE_ASSIGN(MAKE_VAR("y"), MAKE_CONST(20));
+    auto ifNode = MAKE_IF(condition, action);
 
     ASSERT_NE(ifNode, nullptr);
     AST::detail::Context ctx;
@@ -307,7 +307,7 @@ TEST(ASTTest, IfNode_FalseCondition)
 }
 
 TEST(ASTTest, PrintNode) {
-    auto printNode = AST::print(AST::variable("x"));
+    auto printNode = MAKE_PRINT(MAKE_VAR("x"));
 
     ASSERT_NE(printNode, nullptr);
     std::stringstream ss;
