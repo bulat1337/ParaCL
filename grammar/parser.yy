@@ -30,6 +30,8 @@
 	#include "log.h"
 	#include "driver.hh"
 	#include "dsl.hh"
+
+	#include <exception>
 }
 
 %define api.token.prefix {TOK_}
@@ -338,4 +340,5 @@ Variable: 	ID
 void yy::parser::error (const location_type& loc, const std::string& msg)
 {
 	std::cerr << loc << ": " << msg << '\n';
+	throw std::runtime_error("Semantic error\n");
 }
