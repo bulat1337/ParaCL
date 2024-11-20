@@ -66,10 +66,7 @@ class Driver final
 
 		if (file.empty()) yyin = stdin;
 		else if (!(yyin = fopen (file.c_str (), "r")))
-		{
-			std::cerr << "cannot open " << file << '\n';
-			exit (EXIT_FAILURE);
-		}
+			throw std::runtime_error("Can't open input file\n");
 	}
 
 	void scan_end ()
