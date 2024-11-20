@@ -133,13 +133,6 @@ Statement:	/* nothing */
 
 				$$ = std::move($1);
 			}
-		 | 	Assign ";"
-		 	{
-				LOG("It's Assign. Moving from concrete rule: {}\n",
-					static_cast<const void*>($$.get()));
-
-				$$ = std::move($1);
-			}
 		 | 	If_Stm
 		 	{
 				LOG("It's If_Stm. Moving from concrete rule: {}\n",
@@ -252,6 +245,13 @@ Expr:	BinaryOp
   	| 	Variable
 		{
 			MSG("Moving VarialeNode\n");
+			$$ = std::move($1);
+		}
+	| 	Assign
+		{
+			LOG("It's Assign. Moving from concrete rule: {}\n",
+				static_cast<const void*>($$.get()));
+
 			$$ = std::move($1);
 		}
 	;

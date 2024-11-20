@@ -48,7 +48,7 @@ TEST(ASTTest, CreateBinaryOpADD)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
 
     EXPECT_EQ(result, 1007);
 }
@@ -62,7 +62,7 @@ TEST(ASTTest, CreateBinaryOpSUB)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 993);
 }
 
@@ -75,7 +75,7 @@ TEST(ASTTest, CreateBinaryOpMUL)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 45);
 }
 
@@ -88,7 +88,7 @@ TEST(ASTTest, CreateBinaryOpDIV)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 7);
 }
 
@@ -101,7 +101,7 @@ TEST(ASTTest, CreateBinaryOpDIVByZero)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    EXPECT_THROW(binOpNode->eval(ctx), std::runtime_error);
+    EXPECT_THROW(binOpNode->eval_value(ctx), std::runtime_error);
 }
 
 TEST(ASTTest, CreateBinaryOpMOD)
@@ -113,7 +113,7 @@ TEST(ASTTest, CreateBinaryOpMOD)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -127,7 +127,7 @@ TEST(ASTTest, CreateBinaryOpAND)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
 
     EXPECT_EQ(result, 0);
 }
@@ -141,7 +141,7 @@ TEST(ASTTest, CreateBinaryOpOR)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -154,7 +154,7 @@ TEST(ASTTest, CreateBinaryOpLESS)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -167,7 +167,7 @@ TEST(ASTTest, CreateBinaryOpLESSorEQUAL)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -180,7 +180,7 @@ TEST(ASTTest, CreateBinaryOpGREATER)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -193,7 +193,7 @@ TEST(ASTTest, CreateBinaryOpGREATERorEQUAL)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -206,7 +206,7 @@ TEST(ASTTest, CreateBinaryOpEQ)
     ASSERT_NE(binOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = binOpNode->eval(ctx);
+    int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -218,7 +218,7 @@ TEST(ASTTest, CreateUnaryOpNEG)
     ASSERT_NE(unaryOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = unaryOpNode->eval(ctx);
+    int result = unaryOpNode->eval_value(ctx);
     EXPECT_EQ(result, 42);
 }
 
@@ -230,7 +230,7 @@ TEST(ASTTest, CreateUnaryOpNOT)
     ASSERT_NE(unaryOpNode, nullptr);
 
     AST::detail::Context ctx;
-    int result = unaryOpNode->eval(ctx);
+    int result = unaryOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
 
@@ -246,7 +246,7 @@ TEST(ASTTest, CreateAssignmentNode)
     ctx.varTables_.emplace_back();
     ctx.curScope_ = 0;
 
-    int result = assignmentNode->eval(ctx);
+    int result = assignmentNode->eval_value(ctx);
 
     EXPECT_EQ(result, 42);
 }
