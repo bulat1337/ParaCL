@@ -29,6 +29,7 @@
 
 	#include "log.h"
 	#include "driver.hh"
+	#include "dsl.hh"
 }
 
 %define api.token.prefix {TOK_}
@@ -94,7 +95,7 @@ Program: /* nothing */
 				}
 
 				drv.ast.globalScope =
-					std::make_unique<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
+					MAKE_SCOPE(drv.stm_table[drv.cur_scope_id]);
 			}
 	   ;
 
@@ -117,7 +118,7 @@ Statements: Statement
 Statement:	/* nothing */
 			{
 				MSG("Void statement\n");
-				$$ = std::make_unique<AST::VoidNode>();
+				$$ = MAKE_VOID();
 			}
 		 |	Expr ";"
 			{
@@ -129,13 +130,6 @@ Statement:	/* nothing */
 		 | 	Scope
 		 	{
 				LOG("It's Scope. Moving from concrete rule: {}\n",
-					static_cast<const void*>($$.get()));
-
-				$$ = std::move($1);
-			}
-		 | 	Assign ";"
-		 	{
-				LOG("It's Assign. Moving from concrete rule: {}\n",
 					static_cast<const void*>($$.get()));
 
 				$$ = std::move($1);
@@ -172,7 +166,7 @@ Scope: 	StartScope Statements EndScope
 				LOG("{}\n", static_cast<const void*>(stm.get()));
 			}
 
-			$$ = std::make_unique<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
+			$$ = MAKE_SCOPE(drv.stm_table[drv.cur_scope_id]);
 
 			MSG("Scope end.\n");
 
@@ -202,25 +196,25 @@ EndScope: 	"}"
 If_Stm: 	IF "(" Expr ")" Statement
 			{
 				MSG("Initialising if statement\n");
-				$$ = std::make_unique<AST::IfNode>(std::move($3), std::move($5));
+				$$ = MAKE_IF($3, $5);
 			};
 
 While_Stm:	WHILE "(" Expr ")" Statement
 			{
 				MSG("Initialising while statement\n");
-				$$ = std::make_unique<AST::WhileNode>(std::move($3), std::move($5));
+				$$ = MAKE_WHILE($3, $5);
 			};
 
 Assign: Variable "=" Expr
 		{
-			$$ = std::make_unique<AST::AssignNode>(std::move($1), std::move($3));
+			$$ = MAKE_ASSIGN($1, $3);
 			LOG("Initialising assignment: {}\n", static_cast<const void*>($$.get()));
 		};
 
 Print: 	"print" Expr
 		{
 			MSG("Initialising print\n");
-			$$ = std::make_unique<AST::PrintNode>(std::move($2));
+			$$ = MAKE_PRINT($2);
 		}
 
 
@@ -242,16 +236,23 @@ Expr:	BinaryOp
   	| 	NUMBER
 		{
 			MSG("Initialising ConstantNode\n");
-			$$ = std::make_unique<AST::ConstantNode>($1);
+			$$ = MAKE_CONST($1);
 		}
 	| 	"?"
 		{
 			MSG("Initialising InNode\n");
-			$$ = std::make_unique<AST::InNode>();
+			$$ = MAKE_IN();
 		}
   	| 	Variable
 		{
 			MSG("Moving VarialeNode\n");
+			$$ = std::move($1);
+		}
+	| 	Assign
+		{
+			LOG("It's Assign. Moving from concrete rule: {}\n",
+				static_cast<const void*>($$.get()));
+
 			$$ = std::move($1);
 		}
 	;
@@ -259,79 +260,57 @@ Expr:	BinaryOp
 BinaryOp: 	Expr "+" Expr
 			{
 				MSG("Initialising ADD operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::ADD,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::ADD, $3);
 			}
 		| 	Expr "-" Expr
 			{
 				MSG("Initialising SUB operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::SUB,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::SUB, $3);
 			}
 		| 	Expr "*" Expr
 			{
 				MSG("Initialising MUL operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::MUL,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::MUL, $3);
 			}
 		| 	Expr "/" Expr
 			{
 				MSG("Initialising DIV operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::DIV,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::DIV, $3);
 			}
 		|	Expr ">" Expr
 			{
 				MSG("Initialising GR operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::GR,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::GR, $3);
 			}
 		|	Expr "<" Expr
 			{
 				MSG("Initialising LS operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::LS,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::LS, $3);
 			}
 		|	Expr ">=" Expr
 			{
 				MSG("Initialising RG_EQ operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::GR_EQ,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::GR_EQ, $3);
 			}
 		|	Expr "<=" Expr
 			{
 				MSG("Initialising LS_EQ operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::LS_EQ,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::LS_EQ, $3);
 			}
 		|	Expr "==" Expr
 			{
 				MSG("Initialising EQ operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::EQ,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::EQ, $3);
 			}
 		|	Expr "!=" Expr
 			{
 				MSG("Initialising NOT_EQ operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::NOT_EQ,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::NOT_EQ, $3);
 			}
 		|	Expr "%" Expr
 			{
 				MSG("Initialising MOD operation\n");
-				$$ = std::make_unique<AST::BinaryOpNode>(	std::move($1),
-															AST::BinaryOp::MOD,
-															std::move($3));
+				$$ = MAKE_BINARY($1, AST::BinaryOp::MOD, $3);
 			}
 		;
 
@@ -339,19 +318,19 @@ BinaryOp: 	Expr "+" Expr
 UnaryOp	: 	"-" Expr %prec UMINUS
 			{
 				MSG("Initialising NEG operation\n");
-				$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NEG);
+				$$ = MAKE_UNARY($2, AST::UnaryOp::NEG);
 			}
 	 	| 	"!" Expr %prec NOT
 			{
 				MSG("Initialising NOT operation\n");
-				$$ = std::make_unique<AST::UnaryOpNode>(std::move($2), AST::UnaryOp::NOT);
+				$$ = MAKE_UNARY($2, AST::UnaryOp::NOT);
 			}
 	 	;
 
 Variable: 	ID
 			{
 				MSG("Initialising VariableNode\n");
-				$$ = std::make_unique<AST::VariableNode>(std::string($1));
+				$$ = MAKE_VAR(std::string($1));
 			};
 
 %%

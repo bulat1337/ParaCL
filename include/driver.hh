@@ -64,7 +64,7 @@ class Driver final
 	{
 		yy_flex_debug = YY_FLEX_DEBUG;
 
-		if (file.empty () || file == "-") yyin = stdin;
+		if (file.empty()) yyin = stdin;
 		else if (!(yyin = fopen (file.c_str (), "r")))
 		{
 			std::cerr << "cannot open " << file << '\n';

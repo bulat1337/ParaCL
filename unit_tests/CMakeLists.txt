@@ -120,6 +120,7 @@ else()
 	target_compile_definitions(unit_tests PRIVATE YY_FLEX_DEBUG=0 YYDEBUG=0)
 endif()
 
+
 target_link_libraries(unit_tests
 	GTest::GTest
 	GTest::Main
@@ -135,6 +136,10 @@ target_include_directories(unit_tests PRIVATE
 
 if(ENABLE_BD_TESTS)
     target_compile_definitions(unit_tests PRIVATE ENABLE_BD_TESTS)
+endif()
+
+if(ENABLE_LOGGING)
+    target_compile_definitions(unit_tests PRIVATE ENABLE_LOGGING)
 endif()
 
 enable_testing()

@@ -1,14 +1,13 @@
 #ifndef NODE_HH
 #define NODE_HH
 
-#include "detail/context.hh"
-#include "detail/inode.hh"
-#include "inode.hh"
+#include "context.hh"
 #include "log.h"
 
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -16,9 +15,51 @@
 namespace AST
 {
 
-class StatementNode : public INode {};
+using VarIterator = std::unordered_map<std::string, int>::iterator;
+template<class T>
+using ObserverPtr = T*;
 
-class ExpressionNode : public StatementNode {};
+enum class BinaryOp
+{
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    GR,
+    LS,
+    EQ,
+    GR_EQ,
+    LS_EQ,
+    NOT_EQ,
+    AND,
+    OR,
+};
+
+enum class UnaryOp
+{
+    NEG,
+    NOT,
+};
+
+class StatementNode
+{
+  public:
+	virtual void eval(detail::Context& ctx) const = 0;
+
+	virtual ~StatementNode() = default;
+};
+
+class ExpressionNode : public StatementNode
+{
+  public:
+	void eval(detail::Context& ctx) const override
+	{
+		eval_value(ctx);
+	}
+
+	virtual int eval_value(detail::Context& ctx) const = 0;
+};
 
 class ConditionalStatementNode : public StatementNode {};
 
@@ -42,7 +83,7 @@ public:
 		}
 	}
 
-    int eval(detail::Context& ctx) const override
+    void eval(detail::Context& ctx) const override
     {
 		MSG("Evaluating scope\n");
 
@@ -71,9 +112,6 @@ public:
 
 		LOG("ctx.curScope_ = {}\n", ctx.curScope_);
 		LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
-
-		// TODO: usless return value. Rework later.
-		return 0;
     }
 
     void pushChild(StmtPtr&& stmt)
@@ -95,9 +133,15 @@ public:
     ConstantNode(int val)
     :   val_(val) {}
 
-    int eval([[maybe_unused]]detail::Context& ctx) const override
+    int eval_value([[maybe_unused]]detail::Context& ctx) const override
     {
 		LOG("Evaluating constant: {}\n", val_);
+
+        return val_;
+    }
+
+    int getVal() const
+    {
         return val_;
     }
 };
@@ -115,7 +159,7 @@ public:
         return name_;
     }
 
-    int eval(detail::Context& ctx) const override
+    int eval_value(detail::Context& ctx) const override
     {
 		LOG("Evaluating variable: {}\n", name_);
 
@@ -130,7 +174,7 @@ public:
             }
         }
 
-		throw std::logic_error("Undeclared variable");
+		throw std::runtime_error("Undeclared variable: " + name_ + "\n");
     }
 };
 
@@ -147,12 +191,12 @@ public:
         right_(std::move(right)),
         op_(op) {}
 
-    int eval(detail::Context& ctx) const override
+    int eval_value(detail::Context& ctx) const override
     {
 		MSG("Evaluating Binary Operation\n");
 
-        int leftVal = left_->eval(ctx);
-        int rightVal = right_->eval(ctx);
+        int leftVal = left_->eval_value(ctx);
+        int rightVal = right_->eval_value(ctx);
 
 		int result = 0;
 
@@ -171,7 +215,7 @@ public:
 				break;
 
             case BinaryOp::DIV:
-                if (rightVal == 0) { /* TODO: error handle */ }
+                if (rightVal == 0) { throw std::runtime_error("Divide by zero"); }
                 result = leftVal / rightVal;
 				break;
 
@@ -212,8 +256,7 @@ public:
 				break;
 
             default:
-                result = -1; // FIXME: remove this
-                // TODO: handle error
+                throw std::runtime_error("Unknown binary operation");
         }
 
 		LOG("It's {}\n", result);
@@ -233,9 +276,9 @@ public:
     :   operand_(std::move(operand)),
         op_(op) {}
 
-    int eval(detail::Context& ctx) const override
+    int eval_value(detail::Context& ctx) const override
     {
-        int operandVal = operand_->eval(ctx);
+        int operandVal = operand_->eval_value(ctx);
 
         switch (op_)
         {
@@ -246,13 +289,12 @@ public:
                 return ! operandVal;
 
             default:
-                return -1; // FIXME: fixme
-                // TODO: error handle
+                throw std::runtime_error("Unknown unary operation");
         }
     }
 };
 
-class AssignNode final : public StatementNode
+class AssignNode final : public ExpressionNode
 {
 private:
     std::unique_ptr<VariableNode> dest_;
@@ -263,14 +305,14 @@ public:
     :   dest_(std::move(dest)),
         expr_(std::move(expr)) {}
 
-    int eval(detail::Context& ctx) const override
+    int eval_value(detail::Context& ctx) const override
     {
 		MSG("Evaluating assignment\n");
 
         std::string destName = dest_->getName();
 
 		MSG("Getting assigned value\n");
-        int value = expr_->eval(ctx);
+        int value = expr_->eval_value(ctx);
 		LOG("Assigned value is {}\n", value);
 
         int32_t scopeId = 0;
@@ -298,16 +340,12 @@ public:
     :   cond_(std::move(cond)),
         scope_(std::move(scope)) {}
 
-    int eval(detail::Context& ctx) const override
+    void eval(detail::Context& ctx) const override
     {
-        int result = 0;
-
-        while (cond_->eval(ctx))
+        while (cond_->eval_value(ctx))
         {
-            result = scope_->eval(ctx);
+            scope_->eval(ctx);
         }
-
-        return result;
     }
 };
 
@@ -322,14 +360,12 @@ public:
     :   cond_(std::move(cond)),
         action_(std::move(action)) {}
 
-    int eval(detail::Context& ctx) const override
+    void eval(detail::Context& ctx) const override
     {
-        if (cond_->eval(ctx))
+        if (cond_->eval_value(ctx))
         {
             return action_->eval(ctx);
         }
-
-        return 0;
     }
 };
 
@@ -342,22 +378,20 @@ public:
     PrintNode(ExprPtr&& expr)
     :   expr_(std::move(expr)) {}
 
-    int eval(detail::Context& ctx) const override
+    void eval(detail::Context& ctx) const override
     {
 		MSG("Evaluation print\n");
 
-        int value = expr_->eval(ctx);
+        int value = expr_->eval_value(ctx);
 
         ctx.out << value;
-
-        return value;
     }
 };
 
 class InNode final : public ExpressionNode
 {
 public:
-    int eval([[maybe_unused]] detail::Context& ctx) const override
+    int eval_value([[maybe_unused]] detail::Context& ctx) const override
     {
         int value = 0;
 
@@ -365,16 +399,19 @@ public:
 
         if (! std::cin.good())
         {
-            // TODO: error handle
+            throw std::runtime_error("Incorrect input");
         }
 
         return value;
     }
 };
 
-class VoidNode final : public ExpressionNode
+class VoidNode final : public StatementNode
 {
-	int eval([[maybe_unused]] detail::Context& ctx) const override { return 0; }
+	void eval([[maybe_unused]] detail::Context& ctx) const override
+	{
+		/* do nothing */
+	}
 };
 
 } // namespace AST
