@@ -15,8 +15,6 @@ TEST(common, if_1) { test_utils::run_test("/common/if_1"); }
 
 TEST(common, if_2) { test_utils::run_test("/common/if_2"); }
 
-TEST(common, if_2) { test_utils::run_test("/common/if_2"); }
-
 TEST(common, while_1) { test_utils::run_test("/common/while_1"); }
 
 TEST(common, while_uminus_logical) { test_utils::run_test("/common/while_uminus_logical"); }
