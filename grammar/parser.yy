@@ -87,8 +87,7 @@
 
 %%
 
-Program: /* nothing */
-	   | 	Statements YYEOF
+Program: 	Statements YYEOF
 	   		{
 				MSG("Initialising global scope with vector of statements:\n");
 				for (const auto& stm : drv.stm_table[drv.cur_scope_id])

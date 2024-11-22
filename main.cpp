@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 	{
 		if (argc <= 1)
 		{
-			LOG("Reading from standard input.\n");
+			MSG("Reading from standard input.\n");
 			status = drv.parse("");
 		}
 		else status = drv.parse(argv[1]);

@@ -85,6 +85,8 @@ public:
 
     void eval(detail::Context& ctx) const override
     {
+		if (children_.empty()) return;
+
 		MSG("Evaluating scope\n");
 
         ++ctx.curScope_;
