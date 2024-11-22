@@ -25,6 +25,8 @@ TEST(common, expression_1) { test_utils::run_test("/common/expression_1"); }
 
 TEST(common, scopes) { test_utils::run_test("/common/scopes"); }
 
+TEST(common, comments) { test_utils::run_test("/common/comments"); }
+
 TEST(ASTTest, CreateConstant)
 {
     auto constNode = MAKE_CONST(42);

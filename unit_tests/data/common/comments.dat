@@ -1,0 +1,11 @@
+variable = 4;
+//variable = 5;
+while (variable > 0)
+{
+	// IGNORE ME
+	variable = variable - 1;
+	print variable;
+}
+
+// 							prints 666
+print 666;
