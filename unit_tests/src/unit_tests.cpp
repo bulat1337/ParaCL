@@ -27,6 +27,8 @@ TEST(common, scopes) { test_utils::run_test("/common/scopes"); }
 
 TEST(common, comments) { test_utils::run_test("/common/comments"); }
 
+TEST(common, blank_file) { test_utils::run_test("/common/blank_file"); }
+
 TEST(ASTTest, CreateConstant)
 {
     auto constNode = MAKE_CONST(42);

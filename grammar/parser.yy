@@ -127,6 +127,11 @@ Statement:	/* nothing */
 				MSG("Void statement\n");
 				$$ = nullptr;
 			}
+		 |	";"
+		 	{
+				MSG("Lone semicolon\n");
+				$$ = nullptr;
+			}
 		 |	Expr ";"
 			{
 				LOG("It's Expr. Moving from concrete rule: {}\n",
