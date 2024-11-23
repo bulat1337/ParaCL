@@ -42,6 +42,34 @@ inline std::unique_ptr<IfNode> if_stmt(ExprPtr condition, StmtPtr action)
     return std::make_unique<IfNode>(std::move(condition), std::move(action));
 }
 
+inline std::unique_ptr<IfNode> if_stmt(	ExprPtr condition,
+										StmtPtr action,
+										ElseLikePtr else_like)
+{
+    return std::make_unique<IfNode>(std::move(condition),
+									std::move(action),
+									std::move(else_like));
+}
+
+inline std::unique_ptr<ElseIfNode> else_if_stmt(ExprPtr condition, StmtPtr action)
+{
+    return std::make_unique<ElseIfNode>(std::move(condition), std::move(action));
+}
+
+inline std::unique_ptr<ElseIfNode> else_if_stmt(	ExprPtr condition,
+													StmtPtr action,
+													ElseLikePtr else_like)
+{
+    return std::make_unique<ElseIfNode>(std::move(condition),
+										std::move(action),
+										std::move(else_like));
+}
+
+inline std::unique_ptr<ElseNode> else_stmt(StmtPtr action)
+{
+    return std::make_unique<ElseNode>(std::move(action));
+}
+
 inline std::unique_ptr<WhileNode> while_stmt(ExprPtr condition, StmtPtr scope)
 {
     return std::make_unique<WhileNode>(std::move(condition), std::move(scope));
@@ -73,7 +101,19 @@ inline std::unique_ptr<ScopeNode> scope(std::vector<StmtPtr> statements)
 #define MAKE_ASSIGN(var, expr) AST::detail::assignment(std::move(var), std::move(expr))
 #define MAKE_PRINT(expr) AST::detail::print(std::move(expr))
 #define MAKE_WHILE(cond, scope) AST::detail::while_stmt(std::move(cond), std::move(scope))
+
 #define MAKE_IF(cond, action) AST::detail::if_stmt(std::move(cond), std::move(action))
+
+#define MAKE_IFELSE(cond, action, else_like) \
+	AST::detail::if_stmt(std::move(cond), std::move(action), std::move(else_like))
+
+#define MAKE_ELSEIF(cond, action) AST::detail::else_if_stmt(std::move(cond), std::move(action))
+
+#define MAKE_ELSE_IFELSE(cond, action, else_like) \
+	AST::detail::else_if_stmt(std::move(cond), std::move(action), std::move(else_like))
+
+#define MAKE_ELSE(action) AST::detail::else_stmt(std::move(action))
+
 #define MAKE_IN() AST::detail::in()
 #define MAKE_SCOPE(stmts) AST::detail::scope(std::move(stmts))
 
