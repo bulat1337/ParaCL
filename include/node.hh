@@ -351,23 +351,82 @@ public:
     }
 };
 
+class ElseLikeNode : public StatementNode {};
+
+using ElseLikePtr = std::unique_ptr<ElseLikeNode>;
+
+class ElseIfNode final : public ElseLikeNode
+{
+  private:
+    ExprPtr cond_;
+    StmtPtr action_;
+	ElseLikePtr alt_action_;
+
+  public:
+    ElseIfNode(ExprPtr&& cond, StmtPtr&& action)
+    :   cond_(std::move(cond)),
+        action_(std::move(action)) {}
+
+	ElseIfNode(ExprPtr&& cond, StmtPtr&& action, ElseLikePtr&& alt_action)
+    :   cond_(std::move(cond)),
+        action_(std::move(action)),
+		alt_action_(std::move(alt_action)) {}
+
+    void eval(detail::Context& ctx) const override
+    {
+        if (cond_->eval_value(ctx))
+        {
+            action_->eval(ctx);
+        }
+		else
+		{
+			if (alt_action_) alt_action_->eval(ctx);
+		}
+    }
+};
+
+class ElseNode final : public ElseLikeNode
+{
+  private:
+	StmtPtr action_;
+
+  public:
+	ElseNode(StmtPtr&& action)
+    :   action_(std::move(action)) {}
+
+	void eval(detail::Context& ctx) const override
+    {
+        action_->eval(ctx);
+    }
+};
+
 class IfNode final : public ConditionalStatementNode
 {
 private:
     ExprPtr cond_;
     StmtPtr action_;
+	ElseLikePtr alt_action_;
 
 public:
     IfNode(ExprPtr&& cond, StmtPtr&& action)
     :   cond_(std::move(cond)),
         action_(std::move(action)) {}
 
+	IfNode(ExprPtr&& cond, StmtPtr&& action, ElseLikePtr&& alt_action)
+    :   cond_(std::move(cond)),
+        action_(std::move(action)),
+		alt_action_(std::move(alt_action)) {}
+
     void eval(detail::Context& ctx) const override
     {
         if (cond_->eval_value(ctx))
         {
-            return action_->eval(ctx);
+            action_->eval(ctx);
         }
+		else
+		{
+			if (alt_action_) alt_action_->eval(ctx);
+		}
     }
 };
 
@@ -406,14 +465,6 @@ public:
 
         return value;
     }
-};
-
-class VoidNode final : public StatementNode
-{
-	void eval([[maybe_unused]] detail::Context& ctx) const override
-	{
-		/* do nothing */
-	}
 };
 
 } // namespace AST

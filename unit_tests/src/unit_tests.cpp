@@ -27,6 +27,14 @@ TEST(common, scopes) { test_utils::run_test("/common/scopes"); }
 
 TEST(common, comments) { test_utils::run_test("/common/comments"); }
 
+TEST(common, blank_file) { test_utils::run_test("/common/blank_file"); }
+
+TEST(common, if_else) { test_utils::run_test("/common/if_else"); }
+
+TEST(common, else_if_1) { test_utils::run_test("/common/else_if_1"); }
+
+TEST(common, else_if_2) { test_utils::run_test("/common/else_if_2"); }
+
 TEST(ASTTest, CreateConstant)
 {
     auto constNode = MAKE_CONST(42);

@@ -49,6 +49,8 @@
 	RCPAREN		"}"
 	SEMIC		";"
 	IF			"if"
+	ELSE		"else"
+	ELSEIF		"else if"
 	WHILE		"while"
 	GREATER		">"
 	LESS		"<"
@@ -71,6 +73,9 @@
 %nterm <std::unique_ptr<AST::ScopeNode>> 		Scope
 %nterm <std::unique_ptr<AST::PrintNode>> 		Print
 %nterm <std::unique_ptr<AST::IfNode>> 			If_Stm
+%nterm <std::unique_ptr<AST::ElseLikeNode>> 	Else_Like
+%nterm <std::unique_ptr<AST::ElseNode>> 		Else
+%nterm <std::unique_ptr<AST::ElseIfNode>> 		Else_If
 %nterm <std::unique_ptr<AST::WhileNode>> 		While_Stm
 %nterm <std::unique_ptr<AST::VariableNode>> 	Variable
 
@@ -102,24 +107,35 @@ Program: 	Statements YYEOF
 
 Statements: Statement
 			{
-				LOG("Pushing statement : {}\n",
-					static_cast<const void*>($1.get()));
+				auto stm = std::move($1);
 
-				drv.stm_table[drv.cur_scope_id].push_back(std::move($1));
+				LOG("Pushing statement : {}\n",
+					static_cast<const void*>(stm.get()));
+
+				if (stm)
+					drv.stm_table[drv.cur_scope_id].push_back(std::move(stm));
 			}
 		  | Statements Statement
 		  	{
-				LOG("Pushing statement : {}\n",
-					static_cast<const void*>($2.get()));
+				auto stm = std::move($2);
 
-				drv.stm_table[drv.cur_scope_id].push_back(std::move($2));
+				LOG("Pushing statement : {}\n",
+					static_cast<const void*>(stm.get()));
+
+				if (stm)
+					drv.stm_table[drv.cur_scope_id].push_back(std::move(stm));
 			}
 		  ;
 
 Statement:	/* nothing */
 			{
 				MSG("Void statement\n");
-				$$ = MAKE_VOID();
+				$$ = nullptr;
+			}
+		 |	";"
+		 	{
+				MSG("Lone semicolon\n");
+				$$ = nullptr;
 			}
 		 |	Expr ";"
 			{
@@ -198,7 +214,36 @@ If_Stm: 	IF "(" Expr ")" Statement
 			{
 				MSG("Initialising if statement\n");
 				$$ = MAKE_IF($3, $5);
-			};
+			}
+	  |		IF "(" Expr ")" Statement Else_Like
+	  		{
+				$$ = MAKE_IFELSE($3, $5, $6);
+			}
+
+Else_Like:	Else
+			{
+				$$ = std::move($1);
+			}
+		|	Else_If
+			{
+				$$ = std::move($1);
+			}
+		;
+
+Else:		ELSE Statement
+			{
+				$$ = MAKE_ELSE($2);
+			}
+
+Else_If:	ELSEIF "(" Expr ")" Statement
+			{
+				$$ = MAKE_ELSEIF($3, $5);
+			}
+	  |		ELSEIF "(" Expr ")" Statement Else_Like
+	  		{
+				$$ = MAKE_ELSE_IFELSE($3, $5, $6);
+			}
+	  ;
 
 While_Stm:	WHILE "(" Expr ")" Statement
 			{
