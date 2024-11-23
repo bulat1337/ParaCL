@@ -62,11 +62,6 @@ inline std::unique_ptr<ScopeNode> scope(std::vector<StmtPtr> statements)
     return std::make_unique<ScopeNode>(std::move(statements));
 }
 
-inline std::unique_ptr<VoidNode> voidstm()
-{
-    return std::make_unique<VoidNode>();
-}
-
 }; // namespace detail
 
 } // namespace AST
@@ -81,7 +76,6 @@ inline std::unique_ptr<VoidNode> voidstm()
 #define MAKE_IF(cond, action) AST::detail::if_stmt(std::move(cond), std::move(action))
 #define MAKE_IN() AST::detail::in()
 #define MAKE_SCOPE(stmts) AST::detail::scope(std::move(stmts))
-#define MAKE_VOID() AST::detail::voidstm()
 
 #endif // DSL_HH
 

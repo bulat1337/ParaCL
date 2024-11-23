@@ -102,24 +102,30 @@ Program: 	Statements YYEOF
 
 Statements: Statement
 			{
-				LOG("Pushing statement : {}\n",
-					static_cast<const void*>($1.get()));
+				auto stm = std::move($1);
 
-				drv.stm_table[drv.cur_scope_id].push_back(std::move($1));
+				LOG("Pushing statement : {}\n",
+					static_cast<const void*>(stm.get()));
+
+				if (stm)
+					drv.stm_table[drv.cur_scope_id].push_back(std::move(stm));
 			}
 		  | Statements Statement
 		  	{
-				LOG("Pushing statement : {}\n",
-					static_cast<const void*>($2.get()));
+				auto stm = std::move($2);
 
-				drv.stm_table[drv.cur_scope_id].push_back(std::move($2));
+				LOG("Pushing statement : {}\n",
+					static_cast<const void*>(stm.get()));
+
+				if (stm)
+					drv.stm_table[drv.cur_scope_id].push_back(std::move(stm));
 			}
 		  ;
 
 Statement:	/* nothing */
 			{
 				MSG("Void statement\n");
-				$$ = MAKE_VOID();
+				$$ = nullptr;
 			}
 		 |	Expr ";"
 			{

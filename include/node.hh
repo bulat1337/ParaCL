@@ -408,14 +408,6 @@ public:
     }
 };
 
-class VoidNode final : public StatementNode
-{
-	void eval([[maybe_unused]] detail::Context& ctx) const override
-	{
-		/* do nothing */
-	}
-};
-
 } // namespace AST
 
 #endif // ! NODE_HH
