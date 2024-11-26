@@ -35,6 +35,8 @@ TEST(common, else_if_1) { test_utils::run_test("/common/else_if_1"); }
 
 TEST(common, else_if_2) { test_utils::run_test("/common/else_if_2"); }
 
+TEST(common, associative_assign) { test_utils::run_test("/common/associative_assign"); }
+
 TEST(ASTTest, CreateConstant)
 {
     auto constNode = MAKE_CONST(42);
