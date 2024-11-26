@@ -37,6 +37,22 @@ TEST(common, else_if_2) { test_utils::run_test("/common/else_if_2"); }
 
 TEST(common, associative_assign) { test_utils::run_test("/common/associative_assign"); }
 
+TEST(common, multiple_negate) { test_utils::run_test("/common/multiple_negate"); }
+
+TEST(common, assign_and_logical) { test_utils::run_test("/common/assign_and_logical"); }
+
+TEST(common, logical_negation) { test_utils::run_test("/common/logical_negation"); }
+
+TEST(common, logical_print_1) { test_utils::run_test("/common/logical_print_1"); }
+
+TEST(common, logical_negation_simple) { test_utils::run_test("/common/logical_negation_simple"); }
+
+TEST(common, mod_simple) { test_utils::run_test("/common/mod_simple"); }
+
+TEST(common, comp_simple) { test_utils::run_test("/common/comp_simple"); }
+
+TEST(common, mod) { test_utils::run_test("/common/mod"); }
+
 TEST(ASTTest, CreateConstant)
 {
     auto constNode = MAKE_CONST(42);

@@ -1,0 +1,7 @@
+x = 1000;
+y = -7;
+
+result = (z = x + y) && (y > 0);
+
+print z;      
+print result;
