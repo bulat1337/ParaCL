@@ -365,7 +365,7 @@ BinaryOp: 	Expr "+" Expr
 				MSG("Initialising MOD operation\n");
 				$$ = MAKE_BINARY($1, AST::BinaryOp::AND, $3);
 			}
-		|	Expr "%" Expr
+		|	Expr "||" Expr
 			{
 				MSG("Initialising MOD operation\n");
 				$$ = MAKE_BINARY($1, AST::BinaryOp::OR, $3);
