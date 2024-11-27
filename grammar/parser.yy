@@ -60,6 +60,8 @@
 	NOT_EQUAL	"!="
 	NOT			"!"
 	MOD			"%"
+	AND			"&&"
+	OR 			"||"
 ;
 
 %token <std::string>	ID		"identifier"
@@ -357,6 +359,16 @@ BinaryOp: 	Expr "+" Expr
 			{
 				MSG("Initialising MOD operation\n");
 				$$ = MAKE_BINARY($1, AST::BinaryOp::MOD, $3);
+			}
+		|	Expr "&&" Expr
+			{
+				MSG("Initialising MOD operation\n");
+				$$ = MAKE_BINARY($1, AST::BinaryOp::AND, $3);
+			}
+		|	Expr "||" Expr
+			{
+				MSG("Initialising MOD operation\n");
+				$$ = MAKE_BINARY($1, AST::BinaryOp::OR, $3);
 			}
 		;
 
