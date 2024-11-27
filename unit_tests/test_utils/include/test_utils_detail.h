@@ -44,8 +44,6 @@ inline std::string get_answer(std::string_view file_name)
     std::string answer((std::istreambuf_iterator<char>(answer_file)),
                        std::istreambuf_iterator<char>());
 
-    answer.erase(std::remove(answer.begin(), answer.end(), '\n'), answer.end());
-
     return answer;
 }
 

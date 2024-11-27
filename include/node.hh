@@ -445,7 +445,7 @@ public:
 
         int value = expr_->eval_value(ctx);
 
-        ctx.out << value;
+        ctx.out << value << '\n';
     }
 };
 
