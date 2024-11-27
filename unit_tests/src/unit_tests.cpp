@@ -334,7 +334,8 @@ TEST(ASTTest, IfNode_FalseCondition)
     EXPECT_EQ(ctx.varTables_[0].count("y"), 0);
 }
 
-TEST(ASTTest, PrintNode) {
+TEST(ASTTest, PrintNode) 
+{
     auto printNode = MAKE_PRINT(MAKE_VAR("x"));
 
     ASSERT_NE(printNode, nullptr);
@@ -347,5 +348,5 @@ TEST(ASTTest, PrintNode) {
 
     printNode->eval(ctx);
 
-    EXPECT_EQ(ss.str(), "42");
+    EXPECT_EQ(ss.str(), "42\n");
 }
