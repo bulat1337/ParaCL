@@ -1,15 +1,18 @@
-#include <gtest/gtest.h>  // for Test, TestInfo (ptr only), TEST
-#include <string>         // for basic_string
-#include <vector>
+#include "ast.hh"
 #include "dsl.hh"
 #include "node.hh"
-#include "ast.hh"
+#include <gtest/gtest.h> // for Test, TestInfo (ptr only), TEST
+#include <string>        // for basic_string
+#include <vector>
 
-#include "test_utils.h"   // for run_test
+#include "test_utils.h" // for run_test
 
 TEST(common, basic_1) { test_utils::run_test("/common/basic_1"); }
 
-TEST(common, local_variables) { test_utils::run_test("/common/local_variables"); }
+TEST(common, local_variables)
+{
+    test_utils::run_test("/common/local_variables");
+}
 
 TEST(common, if_1) { test_utils::run_test("/common/if_1"); }
 
@@ -17,9 +20,15 @@ TEST(common, if_2) { test_utils::run_test("/common/if_2"); }
 
 TEST(common, while_1) { test_utils::run_test("/common/while_1"); }
 
-TEST(common, while_uminus_logical) { test_utils::run_test("/common/while_uminus_logical"); }
+TEST(common, while_uminus_logical)
+{
+    test_utils::run_test("/common/while_uminus_logical");
+}
 
-TEST(common, while_if_logical_mod) { test_utils::run_test("/common/while_if_logical_mod"); }
+TEST(common, while_if_logical_mod)
+{
+    test_utils::run_test("/common/while_if_logical_mod");
+}
 
 TEST(common, expression_1) { test_utils::run_test("/common/expression_1"); }
 
@@ -35,17 +44,35 @@ TEST(common, else_if_1) { test_utils::run_test("/common/else_if_1"); }
 
 TEST(common, else_if_2) { test_utils::run_test("/common/else_if_2"); }
 
-TEST(common, associative_assign) { test_utils::run_test("/common/associative_assign"); }
+TEST(common, associative_assign)
+{
+    test_utils::run_test("/common/associative_assign");
+}
 
-TEST(common, multiple_negate) { test_utils::run_test("/common/multiple_negate"); }
+TEST(common, multiple_negate)
+{
+    test_utils::run_test("/common/multiple_negate");
+}
 
-TEST(common, assign_and_logical) { test_utils::run_test("/common/assign_and_logical"); }
+TEST(common, assign_and_logical)
+{
+    test_utils::run_test("/common/assign_and_logical");
+}
 
-TEST(common, logical_negation) { test_utils::run_test("/common/logical_negation"); }
+TEST(common, logical_negation)
+{
+    test_utils::run_test("/common/logical_negation");
+}
 
-TEST(common, logical_print_1) { test_utils::run_test("/common/logical_print_1"); }
+TEST(common, logical_print_1)
+{
+    test_utils::run_test("/common/logical_print_1");
+}
 
-TEST(common, logical_negation_simple) { test_utils::run_test("/common/logical_negation_simple"); }
+TEST(common, logical_negation_simple)
+{
+    test_utils::run_test("/common/logical_negation_simple");
+}
 
 TEST(common, mod_simple) { test_utils::run_test("/common/mod_simple"); }
 
@@ -144,7 +171,6 @@ TEST(ASTTest, CreateBinaryOpMOD)
     int result = binOpNode->eval_value(ctx);
     EXPECT_EQ(result, 1);
 }
-
 
 TEST(ASTTest, CreateBinaryOpAND)
 {
@@ -281,8 +307,11 @@ TEST(ASTTest, CreateAssignmentNode)
 
 TEST(ASTTest, WhileNode_ConditionTrue)
 {
-    auto condition = MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::LS, MAKE_CONST(10));
-    auto action = MAKE_ASSIGN(MAKE_VAR("x"), MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::ADD, MAKE_CONST(1)));
+    auto condition =
+        MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::LS, MAKE_CONST(10));
+    auto action = MAKE_ASSIGN(
+        MAKE_VAR("x"),
+        MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::ADD, MAKE_CONST(1)));
     auto whileNode = MAKE_WHILE(condition, action);
 
     ASSERT_NE(whileNode, nullptr);
@@ -299,7 +328,8 @@ TEST(ASTTest, WhileNode_ConditionTrue)
 
 TEST(ASTTest, IfNode_TrueCondition)
 {
-    auto condition = MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::EQ, MAKE_CONST(10));
+    auto condition =
+        MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::EQ, MAKE_CONST(10));
     auto action = MAKE_ASSIGN(MAKE_VAR("y"), MAKE_CONST(20));
 
     auto ifNode = MAKE_IF(condition, action);
@@ -316,10 +346,10 @@ TEST(ASTTest, IfNode_TrueCondition)
     EXPECT_EQ(ctx.varTables_[0]["y"], 20);
 }
 
-
 TEST(ASTTest, IfNode_FalseCondition)
 {
-    auto condition = MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::EQ, MAKE_CONST(10));
+    auto condition =
+        MAKE_BINARY(MAKE_VAR("x"), AST::BinaryOp::EQ, MAKE_CONST(10));
     auto action = MAKE_ASSIGN(MAKE_VAR("y"), MAKE_CONST(20));
     auto ifNode = MAKE_IF(condition, action);
 
@@ -334,7 +364,7 @@ TEST(ASTTest, IfNode_FalseCondition)
     EXPECT_EQ(ctx.varTables_[0].count("y"), 0);
 }
 
-TEST(ASTTest, PrintNode) 
+TEST(ASTTest, PrintNode)
 {
     auto printNode = MAKE_PRINT(MAKE_VAR("x"));
 

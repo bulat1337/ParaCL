@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <string_view>
 
 namespace AST
 {
@@ -156,7 +157,7 @@ private:
 public:
 	VariableNode(const std::string& name): name_(name) {}
 
-    const std::string& getName() const
+    std::string_view getName() const
     {
         return name_;
     }
@@ -165,18 +166,7 @@ public:
     {
 		LOG("Evaluating variable: {}\n", name_);
 
-        for (int32_t scopeId = ctx.curScope_; scopeId >= 0; --scopeId)
-        {
-            auto it = ctx.varTables_[scopeId].find(name_);
-
-            if (it != ctx.varTables_[scopeId].end())
-            {
-				LOG("It's {}\n", it->second);
-                return it->second;
-            }
-        }
-
-		throw std::runtime_error("Undeclared variable: " + name_ + "\n");
+		return ctx.getVarValue(name_);
     }
 };
 
@@ -311,7 +301,7 @@ public:
     {
 		MSG("Evaluating assignment\n");
 
-        std::string destName = dest_->getName();
+        std::string_view destName = dest_->getName();
 
 		MSG("Getting assigned value\n");
         int value = expr_->eval_value(ctx);
