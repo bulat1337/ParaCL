@@ -32,11 +32,14 @@ class Context final
 
 	int getVarValue(std::string_view name) const
 	{
-		for (int32_t scopeId = curScope_; scopeId >= 0; --scopeId)
-        {
-            auto it = varTables_[scopeId].find(name);
+		auto iter = varTables_.rbegin() + (varTables_.size() - curScope_ - 1);
+		auto rend = varTables_.rend();
 
-            if (it != varTables_[scopeId].end())
+		for (;iter != rend; ++iter)
+		{
+            auto it = iter->find(name);
+
+            if (it != iter->end())
             {
 				LOG("It's {}\n", it->second);
                 return it->second;
