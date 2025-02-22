@@ -118,7 +118,7 @@ Statements: Statement
 			}
 		  | Statements Statement
 		  	{
-				auto stm = std::move($2);
+				auto stm = $2;
 
 				LOG("Pushing statement : {}\n",
 					static_cast<const void*>(stm));
