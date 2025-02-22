@@ -29,7 +29,6 @@
 
 	#include "log.h"
 	#include "driver.hh"
-	#include "dsl.hh"
 
 	#include <exception>
 }
@@ -68,20 +67,20 @@
 %token <int> 			NUMBER 	"number"
 
 // ----- Statement derived -----
-%nterm <std::unique_ptr<AST::ExpressionNode>> 	Expr
-%nterm <std::unique_ptr<AST::UnaryOpNode>> 		UnaryOp
-%nterm <std::unique_ptr<AST::BinaryOpNode>> 	BinaryOp
-%nterm <std::unique_ptr<AST::AssignNode>> 		Assign
-%nterm <std::unique_ptr<AST::ScopeNode>> 		Scope
-%nterm <std::unique_ptr<AST::PrintNode>> 		Print
-%nterm <std::unique_ptr<AST::IfNode>> 			If_Stm
-%nterm <std::unique_ptr<AST::ElseLikeNode>> 	Else_Like
-%nterm <std::unique_ptr<AST::ElseNode>> 		Else
-%nterm <std::unique_ptr<AST::ElseIfNode>> 		Else_If
-%nterm <std::unique_ptr<AST::WhileNode>> 		While_Stm
-%nterm <std::unique_ptr<AST::VariableNode>> 	Variable
+%nterm <AST::ExpressionNode*> 	Expr
+%nterm <AST::UnaryOpNode*> 		UnaryOp
+%nterm <AST::BinaryOpNode*> 	BinaryOp
+%nterm <AST::AssignNode*> 		Assign
+%nterm <AST::ScopeNode*> 		Scope
+%nterm <AST::PrintNode*> 		Print
+%nterm <AST::IfNode*> 			If_Stm
+%nterm <AST::ElseLikeNode*> 	Else_Like
+%nterm <AST::ElseNode*> 		Else
+%nterm <AST::ElseIfNode*> 		Else_If
+%nterm <AST::WhileNode*> 		While_Stm
+%nterm <AST::VariableNode*> 	Variable
 
-%nterm <std::unique_ptr<AST::StatementNode>>	Statement
+%nterm <AST::StatementNode*>	Statement
 
 %printer { yyo << $$; } <*>;
 
@@ -99,33 +98,33 @@ Program: 	Statements YYEOF
 				MSG("Initialising global scope with vector of statements:\n");
 				for (const auto& stm : drv.stm_table[drv.cur_scope_id])
 				{
-					LOG("{}\n", static_cast<const void*>(stm.get()));
+					LOG("{}\n", static_cast<const void*>(stm));
 				}
 
 				drv.ast.globalScope =
-					MAKE_SCOPE(drv.stm_table[drv.cur_scope_id]);
+					drv.ast.construct<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
 			}
 	   ;
 
 Statements: Statement
 			{
-				auto stm = std::move($1);
+				auto stm = $1;
 
 				LOG("Pushing statement : {}\n",
-					static_cast<const void*>(stm.get()));
+					static_cast<const void*>(stm));
 
 				if (stm)
-					drv.stm_table[drv.cur_scope_id].push_back(std::move(stm));
+					drv.stm_table[drv.cur_scope_id].push_back(stm);
 			}
 		  | Statements Statement
 		  	{
 				auto stm = std::move($2);
 
 				LOG("Pushing statement : {}\n",
-					static_cast<const void*>(stm.get()));
+					static_cast<const void*>(stm));
 
 				if (stm)
-					drv.stm_table[drv.cur_scope_id].push_back(std::move(stm));
+					drv.stm_table[drv.cur_scope_id].push_back(stm);
 			}
 		  ;
 
@@ -142,38 +141,38 @@ Statement:	/* nothing */
 		 |	Expr ";"
 			{
 				LOG("It's Expr. Moving from concrete rule: {}\n",
-					static_cast<const void*>($$.get()));
+					static_cast<const void*>($$));
 
-				$$ = std::move($1);
+				$$ = $1;
 			}
 		 | 	Scope
 		 	{
 				LOG("It's Scope. Moving from concrete rule: {}\n",
-					static_cast<const void*>($$.get()));
+					static_cast<const void*>($$));
 
-				$$ = std::move($1);
+				$$ = $1;
 			}
 		 | 	If_Stm
 		 	{
 				LOG("It's If_Stm. Moving from concrete rule: {}\n",
-					static_cast<const void*>($$.get()));
+					static_cast<const void*>($$));
 
-				$$ = std::move($1);
+				$$ = $1;
 			}
 		|
 			While_Stm
 			{
 				LOG("It's While_Stm. Moving from concrete rule: {}\n",
-					static_cast<const void*>($$.get()));
+					static_cast<const void*>($$));
 
-				$$ = std::move($1);
+				$$ = $1;
 			}
 		 | 	Print ";"
 		 	{
 				LOG("It's Print. Moving from concrete rule: {}\n",
-					static_cast<const void*>($$.get()));
+					static_cast<const void*>($$));
 
-				$$ = std::move($1);
+				$$ = $1;
 			}
 		 ;
 
@@ -182,10 +181,10 @@ Scope: 	StartScope Statements EndScope
 			MSG("Initialising scope with vector of statements:\n");
 			for (const auto& stm : drv.stm_table[drv.cur_scope_id])
 			{
-				LOG("{}\n", static_cast<const void*>(stm.get()));
+				LOG("{}\n", static_cast<const void*>(stm));
 			}
 
-			$$ = MAKE_SCOPE(drv.stm_table[drv.cur_scope_id]);
+			$$ = drv.ast.construct<AST::ScopeNode>(std::move(drv.stm_table[drv.cur_scope_id]));
 
 			MSG("Scope end.\n");
 
@@ -215,162 +214,160 @@ EndScope: 	"}"
 If_Stm: 	IF "(" Expr ")" Statement
 			{
 				MSG("Initialising if statement\n");
-				$$ = MAKE_IF($3, $5);
+				$$ = drv.ast.construct<AST::IfNode>($3, $5);
 			}
-	  |		IF "(" Expr ")" Statement Else_Like
+	    |	IF "(" Expr ")" Statement Else_Like
 	  		{
-				$$ = MAKE_IFELSE($3, $5, $6);
+				$$ = drv.ast.construct<AST::IfNode>($3, $5, $6);
 			}
 
 Else_Like:	Else
 			{
-				$$ = std::move($1);
+				$$ = $1;
 			}
 		|	Else_If
 			{
-				$$ = std::move($1);
+				$$ = $1;
 			}
 		;
 
 Else:		ELSE Statement
 			{
-				$$ = MAKE_ELSE($2);
+				$$ = drv.ast.construct<AST::ElseNode>($2);
 			}
 
 Else_If:	ELSEIF "(" Expr ")" Statement
 			{
-				$$ = MAKE_ELSEIF($3, $5);
+				$$ = drv.ast.construct<AST::ElseIfNode>($3, $5);
 			}
 	  |		ELSEIF "(" Expr ")" Statement Else_Like
 	  		{
-				$$ = MAKE_ELSE_IFELSE($3, $5, $6);
+				$$ = drv.ast.construct<AST::ElseIfNode>($3, $5, $6);
 			}
 	  ;
 
 While_Stm:	WHILE "(" Expr ")" Statement
 			{
 				MSG("Initialising while statement\n");
-				$$ = MAKE_WHILE($3, $5);
+				$$ = drv.ast.construct<AST::WhileNode>($3, $5);
 			};
 
 Assign: Variable "=" Expr
 		{
-			$$ = MAKE_ASSIGN($1, $3);
-			LOG("Initialising assignment: {}\n", static_cast<const void*>($$.get()));
+			$$ = drv.ast.construct<AST::AssignNode>($1, $3);
+			LOG("Initialising assignment: {}\n", static_cast<const void*>($$));
 		};
 
 Print: 	"print" Expr
 		{
 			MSG("Initialising print\n");
-			$$ = MAKE_PRINT($2);
+			$$ = drv.ast.construct<AST::PrintNode>($2);
 		}
 
 
 Expr:	BinaryOp
 		{
 			MSG("Moving BinaryOp\n");
-			$$ = std::move($1);
+			$$ = $1;
 		}
 	|	UnaryOp
 		{
 			MSG("Moving UnaryOp\n");
-			$$ = std::move($1);
+			$$ = $1;
 		}
   	| 	"(" Expr ")"
 		{
 			MSG("Moving Expression in parenthesis\n");
-			$$ = std::move($2);
+			$$ = $2;
 		}
   	| 	NUMBER
 		{
-			MSG("Initialising ConstantNode\n");
-			$$ = MAKE_CONST($1);
+			MSG("Initialising AST::ConstantNode\n");
+			$$ = drv.ast.construct<AST::ConstantNode>($1);
 		}
 	| 	"?"
 		{
-			MSG("Initialising InNode\n");
-			$$ = MAKE_IN();
+			MSG("Initialising AST::InNode\n");
+			$$ = drv.ast.construct<AST::InNode>();
 		}
   	| 	Variable
 		{
-			MSG("Moving VarialeNode\n");
-			$$ = std::move($1);
+			MSG("Moving AST::VarialeNode\n");
+			$$ = $1;
 		}
 	| 	Assign
 		{
 			LOG("It's Assign. Moving from concrete rule: {}\n",
-				static_cast<const void*>($$.get()));
+				static_cast<const void*>($$));
 
-			$$ = std::move($1);
+			$$ = $1;
 		}
 	;
 
 BinaryOp: 	Expr "+" Expr
 			{
 				MSG("Initialising ADD operation\n");
-				$$ = AST::detail::binary_op($1, AST::BinaryOp::ADD, $3);
-				$$ = AST::construct<BinaryOp>(lhs, BinaryOp::Plus, rhs);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::ADD, $3);
 			}
 		| 	Expr "-" Expr
 			{
 				MSG("Initialising SUB operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::SUB, $3);
-				$$ = construct<BinaryOp>(lhs, BinaryOp::Plus, rhs);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::SUB, $3);
 			}
 		| 	Expr "*" Expr
 			{
 				MSG("Initialising MUL operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::MUL, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::MUL, $3);
 			}
 		| 	Expr "/" Expr
 			{
 				MSG("Initialising DIV operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::DIV, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::DIV, $3);
 			}
 		|	Expr ">" Expr
 			{
 				MSG("Initialising GR operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::GR, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::GR, $3);
 			}
 		|	Expr "<" Expr
 			{
 				MSG("Initialising LS operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::LS, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::LS, $3);
 			}
 		|	Expr ">=" Expr
 			{
 				MSG("Initialising RG_EQ operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::GR_EQ, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::GR_EQ, $3);
 			}
 		|	Expr "<=" Expr
 			{
 				MSG("Initialising LS_EQ operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::LS_EQ, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::LS_EQ, $3);
 			}
 		|	Expr "==" Expr
 			{
 				MSG("Initialising EQ operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::EQ, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::EQ, $3);
 			}
 		|	Expr "!=" Expr
 			{
 				MSG("Initialising NOT_EQ operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::NOT_EQ, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::NOT_EQ, $3);
 			}
 		|	Expr "%" Expr
 			{
 				MSG("Initialising MOD operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::MOD, $3);
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::MOD, $3);
 			}
 		|	Expr "&&" Expr
 			{
-				MSG("Initialising MOD operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::AND, $3);
+				MSG("Initialising AND operation\n");
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::AND, $3);
 			}
 		|	Expr "||" Expr
 			{
-				MSG("Initialising MOD operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::OR, $3);
+				MSG("Initialising OR operation\n");
+				$$ = drv.ast.construct<AST::BinaryOpNode>($1, AST::BinaryOp::OR, $3);
 			}
 		;
 
@@ -378,19 +375,19 @@ BinaryOp: 	Expr "+" Expr
 UnaryOp	: 	"-" Expr %prec UMINUS
 			{
 				MSG("Initialising NEG operation\n");
-				$$ = MAKE_UNARY($2, AST::UnaryOp::NEG);
+				$$ = drv.ast.construct<AST::UnaryOpNode>($2, AST::UnaryOp::NEG);
 			}
 	 	| 	"!" Expr %prec NOT
 			{
 				MSG("Initialising NOT operation\n");
-				$$ = MAKE_UNARY($2, AST::UnaryOp::NOT);
+				$$ = drv.ast.construct<AST::UnaryOpNode>($2, AST::UnaryOp::NOT);
 			}
 	 	;
 
 Variable: 	ID
 			{
-				MSG("Initialising VariableNode\n");
-				$$ = MAKE_VAR(std::string($1));
+				MSG("Initialising AST::VariableNode\n");
+				$$ = drv.ast.construct<AST::VariableNode>(std::string($1));
 			};
 
 %%

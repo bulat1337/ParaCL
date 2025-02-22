@@ -100,12 +100,12 @@ public:
 		MSG("Scopes children:\n");
 		for ([[maybe_unused]]const auto& child : children_)
         {
-			LOG("{}\n", static_cast<const void*>(child.get()));
+			LOG("{}\n", static_cast<const void*>(child));
         }
 
         for (const auto& child : children_)
         {
-			LOG("Evaluating {}\n", static_cast<const void*>(child.get()));
+			LOG("Evaluating {}\n", static_cast<const void*>(child));
             child->eval(ctx);
         }
 

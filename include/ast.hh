@@ -39,13 +39,13 @@ public:
     }
 
 	template <typename NodeType, typename... Args>
-	inline NodeType* construct(Args&&... args)
+	NodeType* construct(Args&&... args)
 	{
 		auto node_ptr = std::make_unique<NodeType>(std::forward<Args>(args)...);
 
 		auto raw_data = node_ptr.get();
 
-		data_.emplace_back(node_ptr);
+		data_.push_back(std::move(node_ptr));
 
 		return raw_data;
 	}
