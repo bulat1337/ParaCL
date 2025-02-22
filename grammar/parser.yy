@@ -308,12 +308,14 @@ Expr:	BinaryOp
 BinaryOp: 	Expr "+" Expr
 			{
 				MSG("Initialising ADD operation\n");
-				$$ = MAKE_BINARY($1, AST::BinaryOp::ADD, $3);
+				$$ = AST::detail::binary_op($1, AST::BinaryOp::ADD, $3);
+				$$ = AST::construct<BinaryOp>(lhs, BinaryOp::Plus, rhs);
 			}
 		| 	Expr "-" Expr
 			{
 				MSG("Initialising SUB operation\n");
 				$$ = MAKE_BINARY($1, AST::BinaryOp::SUB, $3);
+				$$ = construct<BinaryOp>(lhs, BinaryOp::Plus, rhs);
 			}
 		| 	Expr "*" Expr
 			{
