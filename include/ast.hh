@@ -18,14 +18,15 @@ private:
     using VarTable = std::unordered_map<std::string, int>;
 
 public:
-    std::unique_ptr<ScopeNode> globalScope;
+    ScopeNode* globalScope;
 
 private:
+
+    std::vector<std::unique_ptr<INode>> data_;
 
     std::vector<VarTable> VarTables_;
 
     detail::Context ctx;
-
 
 public:
 	AST(std::ostream& out = std::cout):
@@ -36,6 +37,18 @@ public:
 		MSG("Evaluating global scope\n");
         globalScope->eval(ctx);
     }
+
+	template <typename NodeType, typename... Args>
+	NodeType* construct(Args&&... args)
+	{
+		auto node_ptr = std::make_unique<NodeType>(std::forward<Args>(args)...);
+
+		auto raw_data = node_ptr.get();
+
+		data_.push_back(std::move(node_ptr));
+
+		return raw_data;
+	}
 };
 
 } // namespace AST

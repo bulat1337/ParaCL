@@ -11,13 +11,12 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <string_view>
 
 namespace AST
 {
 
 using VarIterator = std::unordered_map<std::string, int>::iterator;
-template<class T>
-using ObserverPtr = T*;
 
 enum class BinaryOp
 {
@@ -42,13 +41,15 @@ enum class UnaryOp
     NOT,
 };
 
-class StatementNode
+class INode
 {
   public:
 	virtual void eval(detail::Context& ctx) const = 0;
 
-	virtual ~StatementNode() = default;
+	virtual ~INode() = default;
 };
+
+class StatementNode : public INode {};
 
 class ExpressionNode : public StatementNode
 {
@@ -63,11 +64,11 @@ class ExpressionNode : public StatementNode
 
 class ConditionalStatementNode : public StatementNode {};
 
-using ExprPtr = std::unique_ptr<ExpressionNode>;
+using ExprPtr = ExpressionNode*;
 
-using StmtPtr = std::unique_ptr<StatementNode>;
+using StmtPtr = StatementNode*;
 
-using CondStmtPtr = std::unique_ptr<ConditionalStatementNode>;
+using CondStmtPtr = ConditionalStatementNode*;
 
 class ScopeNode final : public StatementNode
 {
@@ -99,12 +100,12 @@ public:
 		MSG("Scopes children:\n");
 		for ([[maybe_unused]]const auto& child : children_)
         {
-			LOG("{}\n", static_cast<const void*>(child.get()));
+			LOG("{}\n", static_cast<const void*>(child));
         }
 
         for (const auto& child : children_)
         {
-			LOG("Evaluating {}\n", static_cast<const void*>(child.get()));
+			LOG("Evaluating {}\n", static_cast<const void*>(child));
             child->eval(ctx);
         }
 
@@ -156,7 +157,7 @@ private:
 public:
 	VariableNode(const std::string& name): name_(name) {}
 
-    const std::string& getName() const
+    std::string_view getName() const
     {
         return name_;
     }
@@ -165,18 +166,7 @@ public:
     {
 		LOG("Evaluating variable: {}\n", name_);
 
-        for (int32_t scopeId = ctx.curScope_; scopeId >= 0; --scopeId)
-        {
-            auto it = ctx.varTables_[scopeId].find(name_);
-
-            if (it != ctx.varTables_[scopeId].end())
-            {
-				LOG("It's {}\n", it->second);
-                return it->second;
-            }
-        }
-
-		throw std::runtime_error("Undeclared variable: " + name_ + "\n");
+		return ctx.getVarValue(name_);
     }
 };
 
@@ -188,9 +178,9 @@ private:
     BinaryOp op_;
 
 public:
-    BinaryOpNode(ExprPtr&& left, BinaryOp op, ExprPtr&& right)
-    :   left_(std::move(left)),
-        right_(std::move(right)),
+    BinaryOpNode(ExprPtr left, BinaryOp op, ExprPtr right)
+    :   left_(left),
+        right_(right),
         op_(op) {}
 
     int eval_value(detail::Context& ctx) const override
@@ -274,8 +264,8 @@ private:
     UnaryOp op_;
 
 public:
-    UnaryOpNode(ExprPtr&& operand, UnaryOp op)
-    :   operand_(std::move(operand)),
+    UnaryOpNode(ExprPtr operand, UnaryOp op)
+    :   operand_(operand),
         op_(op) {}
 
     int eval_value(detail::Context& ctx) const override
@@ -299,19 +289,19 @@ public:
 class AssignNode final : public ExpressionNode
 {
 private:
-    std::unique_ptr<VariableNode> dest_;
+    VariableNode* dest_;
     ExprPtr expr_;
 
 public:
-    AssignNode(std::unique_ptr<VariableNode>&& dest, ExprPtr&& expr)
-    :   dest_(std::move(dest)),
-        expr_(std::move(expr)) {}
+    AssignNode(VariableNode* dest, ExprPtr expr)
+    :   dest_(dest),
+        expr_(expr) {}
 
     int eval_value(detail::Context& ctx) const override
     {
 		MSG("Evaluating assignment\n");
 
-        std::string destName = dest_->getName();
+        std::string_view destName = dest_->getName();
 
 		MSG("Getting assigned value\n");
         int value = expr_->eval_value(ctx);
@@ -338,9 +328,9 @@ private:
     StmtPtr scope_;
 
 public:
-    WhileNode(ExprPtr&& cond, StmtPtr&& scope)
-    :   cond_(std::move(cond)),
-        scope_(std::move(scope)) {}
+    WhileNode(ExprPtr cond, StmtPtr scope)
+    :   cond_(cond),
+        scope_(scope) {}
 
     void eval(detail::Context& ctx) const override
     {
@@ -353,24 +343,24 @@ public:
 
 class ElseLikeNode : public StatementNode {};
 
-using ElseLikePtr = std::unique_ptr<ElseLikeNode>;
+using ElseLikePtr = ElseLikeNode*;
 
 class ElseIfNode final : public ElseLikeNode
 {
   private:
     ExprPtr cond_;
     StmtPtr action_;
-	ElseLikePtr alt_action_;
+	ElseLikePtr alt_action_{};
 
   public:
-    ElseIfNode(ExprPtr&& cond, StmtPtr&& action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)) {}
+    ElseIfNode(ExprPtr cond, StmtPtr action)
+    :   cond_(cond),
+        action_(action) {}
 
-	ElseIfNode(ExprPtr&& cond, StmtPtr&& action, ElseLikePtr&& alt_action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)),
-		alt_action_(std::move(alt_action)) {}
+	ElseIfNode(ExprPtr cond, StmtPtr action, ElseLikePtr alt_action)
+    :   cond_(cond),
+        action_(action),
+		alt_action_(alt_action) {}
 
     void eval(detail::Context& ctx) const override
     {
@@ -391,8 +381,8 @@ class ElseNode final : public ElseLikeNode
 	StmtPtr action_;
 
   public:
-	ElseNode(StmtPtr&& action)
-    :   action_(std::move(action)) {}
+	ElseNode(StmtPtr action)
+    :   action_(action) {}
 
 	void eval(detail::Context& ctx) const override
     {
@@ -405,17 +395,17 @@ class IfNode final : public ConditionalStatementNode
 private:
     ExprPtr cond_;
     StmtPtr action_;
-	ElseLikePtr alt_action_;
+	ElseLikePtr alt_action_{};
 
 public:
-    IfNode(ExprPtr&& cond, StmtPtr&& action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)) {}
+    IfNode(ExprPtr cond, StmtPtr action)
+    :   cond_(cond),
+        action_(action) {}
 
-	IfNode(ExprPtr&& cond, StmtPtr&& action, ElseLikePtr&& alt_action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)),
-		alt_action_(std::move(alt_action)) {}
+	IfNode(ExprPtr cond, StmtPtr action, ElseLikePtr alt_action)
+    :   cond_(cond),
+        action_(action),
+		alt_action_(alt_action) {}
 
     void eval(detail::Context& ctx) const override
     {
@@ -436,8 +426,8 @@ private:
     ExprPtr expr_;
 
 public:
-    PrintNode(ExprPtr&& expr)
-    :   expr_(std::move(expr)) {}
+    PrintNode(ExprPtr expr)
+    :   expr_(expr) {}
 
     void eval(detail::Context& ctx) const override
     {
