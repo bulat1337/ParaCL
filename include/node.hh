@@ -350,7 +350,7 @@ class ElseIfNode final : public ElseLikeNode
   private:
     ExprPtr cond_;
     StmtPtr action_;
-	ElseLikePtr alt_action_;
+	ElseLikePtr alt_action_{};
 
   public:
     ElseIfNode(ExprPtr cond, StmtPtr action)
@@ -395,7 +395,7 @@ class IfNode final : public ConditionalStatementNode
 private:
     ExprPtr cond_;
     StmtPtr action_;
-	ElseLikePtr alt_action_;
+	ElseLikePtr alt_action_{};
 
 public:
     IfNode(ExprPtr cond, StmtPtr action)
