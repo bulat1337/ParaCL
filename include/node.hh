@@ -17,8 +17,6 @@ namespace AST
 {
 
 using VarIterator = std::unordered_map<std::string, int>::iterator;
-template<class T>
-using ObserverPtr = T*;
 
 enum class BinaryOp
 {
@@ -43,13 +41,15 @@ enum class UnaryOp
     NOT,
 };
 
-class StatementNode
+class INode
 {
   public:
 	virtual void eval(detail::Context& ctx) const = 0;
 
-	virtual ~StatementNode() = default;
+	virtual ~INode() = default;
 };
+
+class StatementNode : public INode {};
 
 class ExpressionNode : public StatementNode
 {
@@ -64,11 +64,11 @@ class ExpressionNode : public StatementNode
 
 class ConditionalStatementNode : public StatementNode {};
 
-using ExprPtr = std::unique_ptr<ExpressionNode>;
+using ExprPtr = ExpressionNode*;
 
-using StmtPtr = std::unique_ptr<StatementNode>;
+using StmtPtr = StatementNode*;
 
-using CondStmtPtr = std::unique_ptr<ConditionalStatementNode>;
+using CondStmtPtr = ConditionalStatementNode*;
 
 class ScopeNode final : public StatementNode
 {
@@ -178,9 +178,9 @@ private:
     BinaryOp op_;
 
 public:
-    BinaryOpNode(ExprPtr&& left, BinaryOp op, ExprPtr&& right)
-    :   left_(std::move(left)),
-        right_(std::move(right)),
+    BinaryOpNode(ExprPtr left, BinaryOp op, ExprPtr right)
+    :   left_(left),
+        right_(right),
         op_(op) {}
 
     int eval_value(detail::Context& ctx) const override
@@ -264,8 +264,8 @@ private:
     UnaryOp op_;
 
 public:
-    UnaryOpNode(ExprPtr&& operand, UnaryOp op)
-    :   operand_(std::move(operand)),
+    UnaryOpNode(ExprPtr operand, UnaryOp op)
+    :   operand_(operand),
         op_(op) {}
 
     int eval_value(detail::Context& ctx) const override
@@ -289,13 +289,13 @@ public:
 class AssignNode final : public ExpressionNode
 {
 private:
-    std::unique_ptr<VariableNode> dest_;
+    VariableNode* dest_;
     ExprPtr expr_;
 
 public:
-    AssignNode(std::unique_ptr<VariableNode>&& dest, ExprPtr&& expr)
-    :   dest_(std::move(dest)),
-        expr_(std::move(expr)) {}
+    AssignNode(VariableNode* dest, ExprPtr expr)
+    :   dest_(dest),
+        expr_(expr) {}
 
     int eval_value(detail::Context& ctx) const override
     {
@@ -328,9 +328,9 @@ private:
     StmtPtr scope_;
 
 public:
-    WhileNode(ExprPtr&& cond, StmtPtr&& scope)
-    :   cond_(std::move(cond)),
-        scope_(std::move(scope)) {}
+    WhileNode(ExprPtr cond, StmtPtr scope)
+    :   cond_(cond),
+        scope_(scope) {}
 
     void eval(detail::Context& ctx) const override
     {
@@ -343,7 +343,7 @@ public:
 
 class ElseLikeNode : public StatementNode {};
 
-using ElseLikePtr = std::unique_ptr<ElseLikeNode>;
+using ElseLikePtr = ElseLikeNode*;
 
 class ElseIfNode final : public ElseLikeNode
 {
@@ -353,14 +353,14 @@ class ElseIfNode final : public ElseLikeNode
 	ElseLikePtr alt_action_;
 
   public:
-    ElseIfNode(ExprPtr&& cond, StmtPtr&& action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)) {}
+    ElseIfNode(ExprPtr cond, StmtPtr action)
+    :   cond_(cond),
+        action_(action) {}
 
-	ElseIfNode(ExprPtr&& cond, StmtPtr&& action, ElseLikePtr&& alt_action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)),
-		alt_action_(std::move(alt_action)) {}
+	ElseIfNode(ExprPtr cond, StmtPtr action, ElseLikePtr alt_action)
+    :   cond_(cond),
+        action_(action),
+		alt_action_(alt_action) {}
 
     void eval(detail::Context& ctx) const override
     {
@@ -381,8 +381,8 @@ class ElseNode final : public ElseLikeNode
 	StmtPtr action_;
 
   public:
-	ElseNode(StmtPtr&& action)
-    :   action_(std::move(action)) {}
+	ElseNode(StmtPtr action)
+    :   action_(action) {}
 
 	void eval(detail::Context& ctx) const override
     {
@@ -398,14 +398,14 @@ private:
 	ElseLikePtr alt_action_;
 
 public:
-    IfNode(ExprPtr&& cond, StmtPtr&& action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)) {}
+    IfNode(ExprPtr cond, StmtPtr action)
+    :   cond_(cond),
+        action_(action) {}
 
-	IfNode(ExprPtr&& cond, StmtPtr&& action, ElseLikePtr&& alt_action)
-    :   cond_(std::move(cond)),
-        action_(std::move(action)),
-		alt_action_(std::move(alt_action)) {}
+	IfNode(ExprPtr cond, StmtPtr action, ElseLikePtr alt_action)
+    :   cond_(cond),
+        action_(action),
+		alt_action_(alt_action) {}
 
     void eval(detail::Context& ctx) const override
     {
@@ -426,8 +426,8 @@ private:
     ExprPtr expr_;
 
 public:
-    PrintNode(ExprPtr&& expr)
-    :   expr_(std::move(expr)) {}
+    PrintNode(ExprPtr expr)
+    :   expr_(expr) {}
 
     void eval(detail::Context& ctx) const override
     {

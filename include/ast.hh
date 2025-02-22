@@ -18,11 +18,14 @@ private:
     using VarTable = std::unordered_map<std::string, int>;
 
 public:
-	ScopeNode* globalScope;
+    ScopeNode* globalScope;
 
-	std::vector<std::unique_ptr<INode>> data_;
-	
 private:
+
+    std::vector<std::unique_ptr<INode>> data_;
+
+    std::vector<VarTable> VarTables_;
+
     detail::Context ctx;
 
 public:
