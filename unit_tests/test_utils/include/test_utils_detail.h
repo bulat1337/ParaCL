@@ -24,7 +24,7 @@ std::string get_result(std::string_view file_name)
 
     status = drv.parse(std::string(file_name));
 
-    drv.ast.eval();
+    drv.eval();
 
     EXPECT_EQ(status, 0);
 
