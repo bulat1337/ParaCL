@@ -77,13 +77,7 @@ class ScopeNode final : public StatementNode
     std::vector<StmtPtr> children_;
 
   public:
-    ScopeNode(std::vector<StmtPtr> &&stms)
-    {
-        for (auto &stm : stms)
-        {
-            children_.push_back(std::move(stm));
-        }
-    }
+    ScopeNode(std::vector<StmtPtr> &&stms) : children_(std::move(stms)) {}
 
     void eval(detail::Context &ctx) const override
     {
@@ -119,12 +113,12 @@ class ScopeNode final : public StatementNode
         LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
     }
 
-    void pushChild(StmtPtr &&stmt) { children_.push_back(std::move(stmt)); }
+    void pushChild(StmtPtr stmt) { children_.push_back(stmt); }
 
     size_t nstms() const { return children_.size(); }
 };
 
-using ScopePtr = std::unique_ptr<ScopeNode>;
+using ScopePtr = ScopeNode*;
 
 class ConstantNode final : public ExpressionNode
 {
