@@ -81,7 +81,7 @@ TEST(common, mod) { test_utils::run_test("/common/mod"); }
 
 TEST(ASTTest, CreateConstant)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto constNode = ast.construct<AST::ConstantNode>(42);
     ASSERT_NE(constNode, nullptr);
     EXPECT_EQ(constNode->getVal(), 42);
@@ -89,7 +89,7 @@ TEST(ASTTest, CreateConstant)
 
 TEST(ASTTest, CreateVariable)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto varNode = ast.construct<AST::VariableNode>("x");
     ASSERT_NE(varNode, nullptr);
     EXPECT_EQ(varNode->getName(), "x");
@@ -97,10 +97,11 @@ TEST(ASTTest, CreateVariable)
 
 TEST(ASTTest, CreateBinaryOpADD)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(1000);
     auto rhs = ast.construct<AST::ConstantNode>(7);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::ADD, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::ADD, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -112,10 +113,11 @@ TEST(ASTTest, CreateBinaryOpADD)
 
 TEST(ASTTest, CreateBinaryOpSUB)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(1000);
     auto rhs = ast.construct<AST::ConstantNode>(7);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::SUB, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::SUB, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -126,10 +128,11 @@ TEST(ASTTest, CreateBinaryOpSUB)
 
 TEST(ASTTest, CreateBinaryOpMUL)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(15);
     auto rhs = ast.construct<AST::ConstantNode>(3);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::MUL, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::MUL, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -140,10 +143,11 @@ TEST(ASTTest, CreateBinaryOpMUL)
 
 TEST(ASTTest, CreateBinaryOpDIV)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(42);
     auto rhs = ast.construct<AST::ConstantNode>(6);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::DIV, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::DIV, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -154,10 +158,11 @@ TEST(ASTTest, CreateBinaryOpDIV)
 
 TEST(ASTTest, CreateBinaryOpDIVByZero)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(42);
     auto rhs = ast.construct<AST::ConstantNode>(0);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::DIV, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::DIV, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -167,10 +172,11 @@ TEST(ASTTest, CreateBinaryOpDIVByZero)
 
 TEST(ASTTest, CreateBinaryOpMOD)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(10);
     auto rhs = ast.construct<AST::ConstantNode>(3);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::MOD, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::MOD, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -181,10 +187,11 @@ TEST(ASTTest, CreateBinaryOpMOD)
 
 TEST(ASTTest, CreateBinaryOpAND)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(1);
     auto rhs = ast.construct<AST::ConstantNode>(0);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::AND, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::AND, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -196,10 +203,11 @@ TEST(ASTTest, CreateBinaryOpAND)
 
 TEST(ASTTest, CreateBinaryOpOR)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(1);
     auto rhs = ast.construct<AST::ConstantNode>(0);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::OR, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::OR, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -210,10 +218,11 @@ TEST(ASTTest, CreateBinaryOpOR)
 
 TEST(ASTTest, CreateBinaryOpLESS)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(3);
     auto rhs = ast.construct<AST::ConstantNode>(7);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::LS, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::LS, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -224,10 +233,11 @@ TEST(ASTTest, CreateBinaryOpLESS)
 
 TEST(ASTTest, CreateBinaryOpLESSorEQUAL)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(3);
     auto rhs = ast.construct<AST::ConstantNode>(7);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::LS_EQ, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::LS_EQ, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -238,10 +248,11 @@ TEST(ASTTest, CreateBinaryOpLESSorEQUAL)
 
 TEST(ASTTest, CreateBinaryOpGREATER)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(10);
     auto rhs = ast.construct<AST::ConstantNode>(5);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::GR, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::GR, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -252,10 +263,11 @@ TEST(ASTTest, CreateBinaryOpGREATER)
 
 TEST(ASTTest, CreateBinaryOpGREATERorEQUAL)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(5);
     auto rhs = ast.construct<AST::ConstantNode>(5);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::GR_EQ, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::GR_EQ, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -266,10 +278,11 @@ TEST(ASTTest, CreateBinaryOpGREATERorEQUAL)
 
 TEST(ASTTest, CreateBinaryOpEQ)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto lhs = ast.construct<AST::ConstantNode>(42);
     auto rhs = ast.construct<AST::ConstantNode>(42);
-    auto binOpNode = ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::EQ, rhs);
+    auto binOpNode =
+        ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::EQ, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
@@ -280,9 +293,10 @@ TEST(ASTTest, CreateBinaryOpEQ)
 
 TEST(ASTTest, CreateUnaryOpNEG)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto operand = ast.construct<AST::ConstantNode>(-42);
-    auto unaryOpNode = ast.construct<AST::UnaryOpNode>(operand, AST::UnaryOp::NEG);
+    auto unaryOpNode =
+        ast.construct<AST::UnaryOpNode>(operand, AST::UnaryOp::NEG);
 
     ASSERT_NE(unaryOpNode, nullptr);
 
@@ -293,9 +307,10 @@ TEST(ASTTest, CreateUnaryOpNEG)
 
 TEST(ASTTest, CreateUnaryOpNOT)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto operand = ast.construct<AST::ConstantNode>(0);
-    auto unaryOpNode = ast.construct<AST::UnaryOpNode>(operand, AST::UnaryOp::NOT);
+    auto unaryOpNode =
+        ast.construct<AST::UnaryOpNode>(operand, AST::UnaryOp::NOT);
 
     ASSERT_NE(unaryOpNode, nullptr);
 
@@ -306,7 +321,7 @@ TEST(ASTTest, CreateUnaryOpNOT)
 
 TEST(ASTTest, CreateAssignmentNode)
 {
-	AST::AST ast;
+    AST::AST ast;
     auto var = ast.construct<AST::VariableNode>("x");
     auto expr = ast.construct<AST::ConstantNode>(42);
     auto assignmentNode = ast.construct<AST::AssignNode>(var, expr);
@@ -324,12 +339,15 @@ TEST(ASTTest, CreateAssignmentNode)
 
 TEST(ASTTest, WhileNode_ConditionTrue)
 {
-	AST::AST ast;
-    auto condition =
-        ast.construct<AST::BinaryOpNode>(ast.construct<AST::VariableNode>("x"), AST::BinaryOp::LS, ast.construct<AST::ConstantNode>(10));
+    AST::AST ast;
+    auto condition = ast.construct<AST::BinaryOpNode>(
+        ast.construct<AST::VariableNode>("x"), AST::BinaryOp::LS,
+        ast.construct<AST::ConstantNode>(10));
     auto action = ast.construct<AST::AssignNode>(
         ast.construct<AST::VariableNode>("x"),
-        ast.construct<AST::BinaryOpNode>(ast.construct<AST::VariableNode>("x"), AST::BinaryOp::ADD, ast.construct<AST::ConstantNode>(1)));
+        ast.construct<AST::BinaryOpNode>(ast.construct<AST::VariableNode>("x"),
+                                         AST::BinaryOp::ADD,
+                                         ast.construct<AST::ConstantNode>(1)));
     auto whileNode = ast.construct<AST::WhileNode>(condition, action);
 
     ASSERT_NE(whileNode, nullptr);
@@ -346,10 +364,13 @@ TEST(ASTTest, WhileNode_ConditionTrue)
 
 TEST(ASTTest, IfNode_TrueCondition)
 {
-	AST::AST ast;
-    auto condition =
-        ast.construct<AST::BinaryOpNode>(ast.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ, ast.construct<AST::ConstantNode>(10));
-    auto action = ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"), ast.construct<AST::ConstantNode>(20));
+    AST::AST ast;
+    auto condition = ast.construct<AST::BinaryOpNode>(
+        ast.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ,
+        ast.construct<AST::ConstantNode>(10));
+    auto action =
+        ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"),
+                                       ast.construct<AST::ConstantNode>(20));
 
     auto ifNode = ast.construct<AST::IfNode>(condition, action);
 
@@ -367,10 +388,13 @@ TEST(ASTTest, IfNode_TrueCondition)
 
 TEST(ASTTest, IfNode_FalseCondition)
 {
-	AST::AST ast;
-    auto condition =
-        ast.construct<AST::BinaryOpNode>(ast.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ, ast.construct<AST::ConstantNode>(10));
-    auto action = ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"), ast.construct<AST::ConstantNode>(20));
+    AST::AST ast;
+    auto condition = ast.construct<AST::BinaryOpNode>(
+        ast.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ,
+        ast.construct<AST::ConstantNode>(10));
+    auto action =
+        ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"),
+                                       ast.construct<AST::ConstantNode>(20));
     auto ifNode = ast.construct<AST::IfNode>(condition, action);
 
     ASSERT_NE(ifNode, nullptr);
@@ -386,8 +410,9 @@ TEST(ASTTest, IfNode_FalseCondition)
 
 TEST(ASTTest, PrintNode)
 {
-	AST::AST ast;
-    auto printNode = ast.construct<AST::PrintNode>(ast.construct<AST::VariableNode>("x"));
+    AST::AST ast;
+    auto printNode =
+        ast.construct<AST::PrintNode>(ast.construct<AST::VariableNode>("x"));
 
     ASSERT_NE(printNode, nullptr);
     std::stringstream ss;

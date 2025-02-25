@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
     try
     {
-        drv.ast.eval();
+        drv.eval();
     }
     catch (std::exception &e)
     {
