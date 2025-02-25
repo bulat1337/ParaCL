@@ -77,7 +77,9 @@ class ScopeNode final : public StatementNode
     std::vector<StmtPtr> children_;
 
   public:
-    ScopeNode(std::vector<StmtPtr> &&stms) : children_(std::move(stms)) {}
+    ScopeNode(std::vector<StmtPtr> &&stms)
+        : children_(std::move(stms))
+    {}
 
     void eval(detail::Context &ctx) const override
     {
@@ -118,7 +120,7 @@ class ScopeNode final : public StatementNode
     size_t nstms() const { return children_.size(); }
 };
 
-using ScopePtr = ScopeNode*;
+using ScopePtr = ScopeNode *;
 
 class ConstantNode final : public ExpressionNode
 {
@@ -299,22 +301,13 @@ class AssignNode final : public ExpressionNode
     {
         MSG("Evaluating assignment\n");
 
-        std::string_view destName = dest_->getName();
-
         MSG("Getting assigned value\n");
         int value = expr_->eval_value(ctx);
         LOG("Assigned value is {}\n", value);
 
-        int32_t scopeId = 0;
+        std::string_view destName = dest_->getName();
 
-        while (scopeId < ctx.curScope_)
-        {
-            if (ctx.varTables_[scopeId].contains(destName))
-                break;
-            scopeId++;
-        }
-
-        ctx.varTables_[scopeId][destName] = value;
+        ctx.get_variable(destName) = value;
 
         return value;
     }
@@ -341,79 +334,38 @@ class WhileNode final : public ConditionalStatementNode
     }
 };
 
-class ElseLikeNode : public StatementNode
-{
-};
-
-using ElseLikePtr = ElseLikeNode *;
-
-class ElseIfNode final : public ElseLikeNode
+class IfElseNode final : public StatementNode
 {
   private:
     ExprPtr cond_{};
     StmtPtr action_{};
-    ElseLikePtr alt_action_{};
+    StmtPtr alt_action_{};
 
   public:
-    ElseIfNode(ExprPtr cond, StmtPtr action)
+    IfElseNode(ExprPtr cond, StmtPtr action)
         : cond_(cond)
         , action_(action)
     {}
 
-    ElseIfNode(ExprPtr cond, StmtPtr action, ElseLikePtr alt_action)
+    IfElseNode(ExprPtr cond, StmtPtr action, StmtPtr alt_action)
         : cond_(cond)
         , action_(action)
         , alt_action_(alt_action)
     {}
 
-    void eval(detail::Context &ctx) const override
-    {
-        if (cond_->eval_value(ctx))
-        {
-            action_->eval(ctx);
-        }
-        else
-        {
-            if (alt_action_)
-                alt_action_->eval(ctx);
-        }
-    }
-};
-
-class ElseNode final : public ElseLikeNode
-{
-  private:
-    StmtPtr action_{};
-
-  public:
-    ElseNode(StmtPtr action)
+    IfElseNode(StmtPtr action)
         : action_(action)
     {}
 
-    void eval(detail::Context &ctx) const override { action_->eval(ctx); }
-};
-
-class IfNode final : public ConditionalStatementNode
-{
-  private:
-    ExprPtr cond_{};
-    StmtPtr action_{};
-    ElseLikePtr alt_action_{};
-
-  public:
-    IfNode(ExprPtr cond, StmtPtr action)
-        : cond_(cond)
-        , action_(action)
-    {}
-
-    IfNode(ExprPtr cond, StmtPtr action, ElseLikePtr alt_action)
-        : cond_(cond)
-        , action_(action)
-        , alt_action_(alt_action)
-    {}
-
     void eval(detail::Context &ctx) const override
     {
+        if (!cond_)
+        {
+            // if there is no condition do it
+            action_->eval(ctx);
+            return;
+        }
+
         if (cond_->eval_value(ctx))
         {
             action_->eval(ctx);

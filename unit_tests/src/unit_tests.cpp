@@ -372,7 +372,7 @@ TEST(ASTTest, IfNode_TrueCondition)
         ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"),
                                        ast.construct<AST::ConstantNode>(20));
 
-    auto ifNode = ast.construct<AST::IfNode>(condition, action);
+    auto ifNode = ast.construct<AST::IfElseNode>(condition, action);
 
     ASSERT_NE(ifNode, nullptr);
 
@@ -395,7 +395,7 @@ TEST(ASTTest, IfNode_FalseCondition)
     auto action =
         ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"),
                                        ast.construct<AST::ConstantNode>(20));
-    auto ifNode = ast.construct<AST::IfNode>(condition, action);
+    auto ifNode = ast.construct<AST::IfElseNode>(condition, action);
 
     ASSERT_NE(ifNode, nullptr);
     AST::detail::Context ctx;

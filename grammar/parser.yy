@@ -73,10 +73,10 @@
 %nterm <AST::AssignNode*> 		Assign
 %nterm <AST::ScopeNode*> 		Scope
 %nterm <AST::PrintNode*> 		Print
-%nterm <AST::IfNode*> 			If_Stm
-%nterm <AST::ElseLikeNode*> 	Else_Like
-%nterm <AST::ElseNode*> 		Else
-%nterm <AST::ElseIfNode*> 		Else_If
+%nterm <AST::IfElseNode*> 		If_Stm
+%nterm <AST::IfElseNode*> 		Else_Like
+%nterm <AST::IfElseNode*> 		Else
+%nterm <AST::IfElseNode*> 		Else_If
 %nterm <AST::WhileNode*> 		While_Stm
 %nterm <AST::VariableNode*> 	Variable
 
@@ -203,11 +203,11 @@ EndScope: 	"}"
 If_Stm: 	IF "(" Expr ")" Statement
 			{
 				MSG("Initialising if statement\n");
-				$$ = drv.construct<AST::IfNode>($3, $5);
+				$$ = drv.construct<AST::IfElseNode>($3, $5);
 			}
 	    |	IF "(" Expr ")" Statement Else_Like
 	  		{
-				$$ = drv.construct<AST::IfNode>($3, $5, $6);
+				$$ = drv.construct<AST::IfElseNode>($3, $5, $6);
 			}
 
 Else_Like:	Else
@@ -222,16 +222,16 @@ Else_Like:	Else
 
 Else:		ELSE Statement
 			{
-				$$ = drv.construct<AST::ElseNode>($2);
+				$$ = drv.construct<AST::IfElseNode>($2);
 			}
 
 Else_If:	ELSEIF "(" Expr ")" Statement
 			{
-				$$ = drv.construct<AST::ElseIfNode>($3, $5);
+				$$ = drv.construct<AST::IfElseNode>($3, $5);
 			}
 	  |		ELSEIF "(" Expr ")" Statement Else_Like
 	  		{
-				$$ = drv.construct<AST::ElseIfNode>($3, $5, $6);
+				$$ = drv.construct<AST::IfElseNode>($3, $5, $6);
 			}
 	  ;
 
