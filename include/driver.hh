@@ -29,7 +29,6 @@ class Driver final
 	yy::location 	location;
 	AST::AST		ast;
 	std::vector<std::vector<AST::StmtPtr>> stm_table;
-	size_t cur_scope_id = 0;
 
   public:
 
