@@ -19,7 +19,7 @@ namespace detail
 class Context final
 {
   public:
-    using VarTable = std::unordered_map<std::string, int>;
+    using VarTable = std::unordered_map<std::string_view, int>;
 
   public:
     std::vector<VarTable> varTables_;

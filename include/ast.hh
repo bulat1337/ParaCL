@@ -6,7 +6,9 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace AST
@@ -15,7 +17,7 @@ namespace AST
 class AST final
 {
 private:
-    using VarTable = std::unordered_map<std::string, int>;
+    using VarTable = std::unordered_map<std::string_view, int>;
 
 public:
     ScopeNode* globalScope;
@@ -24,7 +26,7 @@ private:
 
     std::vector<std::unique_ptr<INode>> data_;
 
-    std::vector<VarTable> VarTables_;
+    std::unordered_set<std::string> name_table_;
 
     detail::Context ctx;
 
@@ -49,6 +51,13 @@ public:
 
 		return raw_data;
 	}
+
+    std::string_view intern_name(const std::string& name)
+    {
+        auto it = name_table_.insert(name).first; 
+    
+        return *it;
+    }
 };
 
 } // namespace AST
