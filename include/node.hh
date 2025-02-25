@@ -152,10 +152,10 @@ public:
 class VariableNode final : public ExpressionNode
 {
 private:
-    std::string name_;
+    std::string_view name_;
 
 public:
-	VariableNode(const std::string& name): name_(name) {}
+	VariableNode(std::string_view name): name_(name) {}
 
     std::string_view getName() const
     {
@@ -301,7 +301,7 @@ public:
     {
 		MSG("Evaluating assignment\n");
 
-        std::string_view destName = dest_->getName();
+        std::string destName = std::string(dest_->getName());
 
 		MSG("Getting assigned value\n");
         int value = expr_->eval_value(ctx);

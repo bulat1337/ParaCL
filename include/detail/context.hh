@@ -19,7 +19,7 @@ namespace detail
 class Context final
 {
   public:
-    using VarTable = std::unordered_map<std::string_view, int>;
+    using VarTable = std::unordered_map<std::string, int>;
 
   public:
     std::vector<VarTable> varTables_;
@@ -35,9 +35,11 @@ class Context final
 		auto iter = varTables_.rbegin() + (varTables_.size() - curScope_ - 1);
 		auto rend = varTables_.rend();
 
+        std::string str_name = std::string(name);
+
 		for (;iter != rend; ++iter)
 		{
-            auto it = iter->find(name);
+            auto it = iter->find(str_name);
 
             if (it != iter->end())
             {
@@ -46,7 +48,7 @@ class Context final
             }
         }
 
-		throw std::runtime_error("Undeclared variable: " + std::string(name) + "\n");
+		throw std::runtime_error("Undeclared variable: " + str_name + "\n");
 	}
 };
 
