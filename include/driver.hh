@@ -18,7 +18,6 @@ extern FILE* yyin;
 
 YY_DECL;
 
-
 class Driver final
 {
   public: /* usings */
