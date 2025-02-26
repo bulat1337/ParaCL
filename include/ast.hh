@@ -16,9 +16,6 @@ namespace AST
 
 class AST final
 {
-private:
-    using VarTable = std::unordered_map<std::string_view, int>;
-
 public:
     ScopeNode* globalScope;
 
