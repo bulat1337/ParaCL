@@ -56,6 +56,11 @@ class Driver final
 
     void form_global_scope() { ast_.globalScope = form_scope(); }
 
+    std::string_view intern_name(const std::string& name)
+    {
+        return ast_.intern_name(name);
+    }
+
     int parse(const std::string &f)
     {
         file_ = f;
