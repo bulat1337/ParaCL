@@ -23,7 +23,7 @@ private:
 
     std::vector<std::unique_ptr<INode>> data_;
 
-    std::unordered_set<std::string> name_table_;
+    std::unordered_set<std::string> NamePool_;
 
     detail::Context ctx;
 
@@ -51,7 +51,7 @@ public:
 
     std::string_view intern_name(const std::string& name)
     {
-        auto it = name_table_.insert(name).first; 
+        auto it = NamePool_.insert(name).first; 
     
         return *it;
     }
