@@ -56,6 +56,13 @@ class Driver final
 
     void form_global_scope() { ast_.globalScope = form_scope(); }
 
+    int getInterpreterBuf() const { return ast_.getInterpreterBuf(); }
+
+    bool varInitialized(std::string_view varName) const
+    {
+        ast_.varInitialized(varName);
+    }
+
     std::string_view intern_name(std::string_view name)
     {
         return ast_.intern_name(name);

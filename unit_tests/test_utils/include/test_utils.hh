@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "log.hh"
-#include "test_utils_detail.h"
+#include "test_utils_detail.hh"
 
 namespace test_utils
 {

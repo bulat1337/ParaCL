@@ -22,6 +22,8 @@ class Interpreter final : public Visitor
         : ctx_(out)
     {}
 
+    int getBuf() const { return buf_; }
+
     void visit(const ConstantNode &node) override { buf_ = node.getVal(); }
 
     void visit(const VariableNode &node) override
@@ -241,6 +243,17 @@ class Interpreter final : public Visitor
         }
 
         buf_ = value;
+    }
+
+    bool varInitialized(std::string_view varName) const
+    {
+        for (const auto &varTable : ctx_.varTables_)
+        {
+            if (varTable.count(varName) > 0)
+                return true;
+        }
+
+        return false;
     }
 };
 

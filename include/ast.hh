@@ -55,6 +55,13 @@ class AST final
 
         return *it;
     }
+
+    int getInterpreterBuf() const { return interpreter_.getBuf(); }
+
+    bool varInitialized(std::string_view varName) const
+    {
+        interpreter_.varInitialized(varName);
+    }
 };
 
 } // namespace AST
