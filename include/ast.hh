@@ -60,7 +60,7 @@ class AST final
 
     bool varInitialized(std::string_view varName) const
     {
-        interpreter_.varInitialized(varName);
+        return interpreter_.varInitialized(varName);
     }
 };
 

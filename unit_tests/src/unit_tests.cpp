@@ -419,7 +419,7 @@ TEST(ASTTest, IfNode_FalseCondition)
     drv.form_global_scope();
     drv.eval();
 
-    EXPECT_EQ(drv.varInitialized("y"), 0);
+    EXPECT_EQ(drv.varInitialized("y"), false);
 }
 
 TEST(ASTTest, PrintNode)

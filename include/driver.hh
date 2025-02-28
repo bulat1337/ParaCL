@@ -60,7 +60,7 @@ class Driver final
 
     bool varInitialized(std::string_view varName) const
     {
-        ast_.varInitialized(varName);
+        return ast_.varInitialized(varName);
     }
 
     std::string_view intern_name(std::string_view name)
