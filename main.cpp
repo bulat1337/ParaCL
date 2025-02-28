@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    LOG("global statements amount: {}\n", drv.ast.globalScope->nstms());
+    LOG("global statements amount: {}\n", drv.getGlobalScope()->nstms());
 
     try
     {

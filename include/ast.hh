@@ -3,6 +3,7 @@
 
 #include "node.hh"
 #include "log.h"
+#include "interpreter.hh"
 
 #include <memory>
 #include <string>
@@ -25,16 +26,17 @@ private:
 
     std::unordered_set<std::string> NamePool_;
 
-    detail::Context ctx;
+	Interpreter interpreter_;
 
 public:
 	AST(std::ostream& out = std::cout):
-		ctx(out) {}
+		interpreter_(out) {}
 
     void eval()
     {
 		MSG("Evaluating global scope\n");
-        globalScope->eval(ctx);
+		interpreter_.visit(*globalScope);
+        // globalScope->eval(ctx);
     }
 
 	template <typename NodeType, typename... Args>
@@ -49,10 +51,10 @@ public:
 		return raw_data;
 	}
 
-    std::string_view intern_name(const std::string& name)
+    std::string_view intern_name(std::string_view name)
     {
-        auto it = NamePool_.insert(name).first; 
-    
+        const auto it = NamePool_.insert(std::string(name)).first;
+
         return *it;
     }
 };

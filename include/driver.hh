@@ -34,6 +34,11 @@ class Driver final
         stm_table_.push_back(std::vector<AST::StmtPtr>());
     }
 
+	const AST::ScopeNode* getGlobalScope() const
+	{
+		return ast_.globalScope;
+	}
+
     void eval() { ast_.eval(); }
 
     template <typename NodeType, typename... Args>
@@ -56,7 +61,7 @@ class Driver final
 
     void form_global_scope() { ast_.globalScope = form_scope(); }
 
-    std::string_view intern_name(const std::string& name)
+    std::string_view intern_name(std::string_view name)
     {
         return ast_.intern_name(name);
     }

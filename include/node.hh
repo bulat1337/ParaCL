@@ -43,14 +43,28 @@ enum class UnaryOp
 
 class ConstantNode;
 class VariableNode;
+class BinaryOpNode;
+class ScopeNode;
+class UnaryOpNode;
+class AssignNode;
+class WhileNode;
+class IfElseNode;
+class PrintNode;
+class InNode;
 
 class Visitor
 {
   public:
 	virtual void visit(const ConstantNode& node) = 0;
 	virtual void visit(const VariableNode& node) = 0;
-
-
+	virtual void visit(const BinaryOpNode& node) = 0;
+	virtual void visit(const ScopeNode& node) = 0;
+	virtual void visit(const UnaryOpNode& node) = 0;
+	virtual void visit(const AssignNode& node) = 0;
+	virtual void visit(const WhileNode& node) = 0;
+	virtual void visit(const IfElseNode& node) = 0;
+	virtual void visit(const PrintNode& node) = 0;
+	virtual void visit(const InNode& node) = 0;
 
 	virtual ~Visitor() = default;
 };
@@ -58,7 +72,7 @@ class Visitor
 class INode
 {
   public:
-    virtual void eval(detail::Context &ctx) const = 0;
+	virtual void accept(Visitor& visitor) const = 0;
 
     virtual ~INode() = default;
 };
@@ -69,10 +83,6 @@ class StatementNode : public INode
 
 class ExpressionNode : public StatementNode
 {
-  public:
-    void eval(detail::Context &ctx) const override { eval_value(ctx); }
-
-    virtual int eval_value(detail::Context &ctx) const = 0;
 };
 
 class ConditionalStatementNode : public StatementNode
@@ -95,43 +105,21 @@ class ScopeNode final : public StatementNode
         : children_(std::move(stms))
     {}
 
-    void eval(detail::Context &ctx) const override
-    {
-        if (children_.empty())
-            return;
+	const std::vector<StmtPtr> getChildren() const
+	{
+		return children_;
+	}
 
-        MSG("Evaluating scope\n");
-
-        ++ctx.curScope_;
-
-        ctx.varTables_.push_back(detail::Context::VarTable());
-
-        LOG("ctx.curScope_ = {}\n", ctx.curScope_);
-        LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
-
-        MSG("Scopes children:\n");
-        for ([[maybe_unused]] const auto &child : children_)
-        {
-            LOG("{}\n", static_cast<const void *>(child));
-        }
-
-        for (const auto &child : children_)
-        {
-            LOG("Evaluating {}\n", static_cast<const void *>(child));
-            child->eval(ctx);
-        }
-
-        ctx.varTables_.pop_back();
-
-        --ctx.curScope_;
-
-        LOG("ctx.curScope_ = {}\n", ctx.curScope_);
-        LOG("ctx.varTables_ size = {}\n", ctx.varTables_.size());
-    }
+	bool empty() const { return children_.empty(); }
 
     void pushChild(StmtPtr stmt) { children_.push_back(stmt); }
 
     size_t nstms() const { return children_.size(); }
+
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 using ScopePtr = ScopeNode *;
@@ -146,16 +134,9 @@ class ConstantNode final : public ExpressionNode
         : val_(val)
     {}
 
-    int eval_value([[maybe_unused]] detail::Context &ctx) const override
-    {
-        LOG("Evaluating constant: {}\n", val_);
-
-        return val_;
-    }
-
     int getVal() const { return val_; }
 
-	void accept(Visitor& visitor)
+	void accept(Visitor& visitor) const override
 	{
 		visitor.visit(*this);
 	}
@@ -173,12 +154,10 @@ class VariableNode final : public ExpressionNode
 
     std::string_view getName() const { return name_; }
 
-    int eval_value(detail::Context &ctx) const override
-    {
-        LOG("Evaluating variable: {}\n", name_);
-
-        return ctx.getVarValue(name_);
-    }
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 using VariablePtr = VariableNode *;
@@ -191,87 +170,28 @@ class BinaryOpNode final : public ExpressionNode
     BinaryOp op_{};
 
   public:
+	void accept_left(Visitor& visitor) const
+	{
+		left_->accept(visitor);
+	}
+
+	void accept_right(Visitor& visitor) const
+	{
+		right_->accept(visitor);
+	}
+
+	BinaryOp getOp() const { return op_; }
+
     BinaryOpNode(ExprPtr left, BinaryOp op, ExprPtr right)
         : left_(left)
         , right_(right)
         , op_(op)
     {}
 
-    int eval_value(detail::Context &ctx) const override
-    {
-        MSG("Evaluating Binary Operation\n");
-
-        int leftVal = left_->eval_value(ctx);
-        int rightVal = right_->eval_value(ctx);
-
-        int result = 0;
-
-        switch (op_)
-        {
-            case BinaryOp::ADD:
-                result = leftVal + rightVal;
-                break;
-
-            case BinaryOp::SUB:
-                result = leftVal - rightVal;
-                break;
-
-            case BinaryOp::MUL:
-                result = leftVal * rightVal;
-                break;
-
-            case BinaryOp::DIV:
-                if (rightVal == 0)
-                {
-                    throw std::runtime_error("Divide by zero");
-                }
-                result = leftVal / rightVal;
-                break;
-
-            case BinaryOp::MOD:
-                result = leftVal % rightVal;
-                break;
-
-            case BinaryOp::LS:
-                result = leftVal < rightVal;
-                break;
-
-            case BinaryOp::GR:
-                result = leftVal > rightVal;
-                break;
-
-            case BinaryOp::LS_EQ:
-                result = leftVal <= rightVal;
-                break;
-
-            case BinaryOp::GR_EQ:
-                result = leftVal >= rightVal;
-                break;
-
-            case BinaryOp::EQ:
-                result = leftVal == rightVal;
-                break;
-
-            case BinaryOp::NOT_EQ:
-                result = leftVal != rightVal;
-                break;
-
-            case BinaryOp::AND:
-                result = leftVal && rightVal;
-                break;
-
-            case BinaryOp::OR:
-                result = leftVal || rightVal;
-                break;
-
-            default:
-                throw std::runtime_error("Unknown binary operation");
-        }
-
-        LOG("It's {}\n", result);
-
-        return result;
-    }
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 class UnaryOpNode final : public ExpressionNode
@@ -286,22 +206,20 @@ class UnaryOpNode final : public ExpressionNode
         , op_(op)
     {}
 
-    int eval_value(detail::Context &ctx) const override
-    {
-        int operandVal = operand_->eval_value(ctx);
+	void acceptOperand(Visitor& visitor) const
+	{
+		operand_->accept(visitor);
+	}
 
-        switch (op_)
-        {
-            case UnaryOp::NEG:
-                return -operandVal;
+	UnaryOp getOp() const
+	{
+		return op_;
+	}
 
-            case UnaryOp::NOT:
-                return !operandVal;
-
-            default:
-                throw std::runtime_error("Unknown unary operation");
-        }
-    }
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 class AssignNode final : public ExpressionNode
@@ -316,20 +234,20 @@ class AssignNode final : public ExpressionNode
         , expr_(expr)
     {}
 
-    int eval_value(detail::Context &ctx) const override
-    {
-        MSG("Evaluating assignment\n");
+	void acceptExpr(Visitor& visitor) const
+	{
+		expr_->accept(visitor);
+	}
 
-        MSG("Getting assigned value\n");
-        int value = expr_->eval_value(ctx);
-        LOG("Assigned value is {}\n", value);
+	std::string_view getDestName() const
+	{
+		return dest_->getName();
+	}
 
-        std::string_view destName = dest_->getName();
-
-        ctx.get_variable(destName) = value;
-
-        return value;
-    }
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 class WhileNode final : public ConditionalStatementNode
@@ -344,13 +262,20 @@ class WhileNode final : public ConditionalStatementNode
         , scope_(scope)
     {}
 
-    void eval(detail::Context &ctx) const override
-    {
-        while (cond_->eval_value(ctx))
-        {
-            scope_->eval(ctx);
-        }
-    }
+	void acceptCond(Visitor& visitor) const
+	{
+		cond_->accept(visitor);
+	}
+
+	void acceptScope(Visitor& visitor) const
+	{
+		scope_->accept(visitor);
+	}
+
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 class IfElseNode final : public StatementNode
@@ -376,25 +301,35 @@ class IfElseNode final : public StatementNode
         : action_(action)
     {}
 
-    void eval(detail::Context &ctx) const override
-    {
-        if (!cond_)
-        {
-            // if there is no condition do it
-            action_->eval(ctx);
-            return;
-        }
+	bool hasCond() const
+	{
+		return cond_ != nullptr;
+	}
 
-        if (cond_->eval_value(ctx))
-        {
-            action_->eval(ctx);
-        }
-        else
-        {
-            if (alt_action_)
-                alt_action_->eval(ctx);
-        }
-    }
+	bool hasAltAction() const
+	{
+		return alt_action_ != nullptr;
+	}
+
+	void acceptCond(Visitor& visitor) const
+	{
+		cond_->accept(visitor);
+	}
+
+	void acceptAction(Visitor& visitor) const
+	{
+		action_->accept(visitor);
+	}
+
+	void acceptAltAction(Visitor& visitor) const
+	{
+		alt_action_->accept(visitor);
+	}
+
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 class PrintNode final : public StatementNode
@@ -407,57 +342,25 @@ class PrintNode final : public StatementNode
         : expr_(expr)
     {}
 
-    void eval(detail::Context &ctx) const override
-    {
-        MSG("Evaluation print\n");
+	void acceptExpr(Visitor& visitor) const
+	{
+		expr_->accept(visitor);
+	}
 
-        int value = expr_->eval_value(ctx);
-
-        ctx.out << value << '\n';
-    }
+	void accept(Visitor& visitor) const override
+	{
+		visitor.visit(*this);
+	}
 };
 
 class InNode final : public ExpressionNode
 {
   public:
-    int eval_value([[maybe_unused]] detail::Context &ctx) const override
-    {
-        int value = 0;
-
-        std::cin >> value;
-
-        if (!std::cin.good())
-        {
-            throw std::runtime_error("Incorrect input");
-        }
-
-        return value;
-    }
-};
-
-class Interpreter : public Visitor
-{
-  private:
-	detail::Context ctx_;
-	int buf_{};
-
-  public:
-	void visit(const ConstantNode& node) override
+	void accept(Visitor& visitor) const override
 	{
-		buf_ = node.getVal();
+		visitor.visit(*this);
 	}
-
-	void visit(const VariableNode& node) override
-	{
-		std::string_view name = node.getName();
-        LOG("Evaluating variable: {}\n", name);
-
-        buf_ = ctx_.getVarValue(name);
-	}
-
 };
-
-
 
 } // namespace AST
 

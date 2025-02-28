@@ -96,7 +96,7 @@
 Program: 	Statements YYEOF
 	   		{
 				MSG("Initialising global scope with vector of statements:\n");
-				for (const auto& stm : drv.cur_scope())
+				for ([[maybe_unused]]const auto& stm : drv.cur_scope())
 				{
 					LOG("{}\n", static_cast<const void*>(stm));
 				}
@@ -176,7 +176,7 @@ Statement:	Expr ";"
 Scope: 	StartScope Statements EndScope
 		{
 			MSG("Initialising scope with vector of statements:\n");
-			for (const auto& stm : drv.cur_scope())
+			for ([[maybe_unused]]const auto& stm : drv.cur_scope())
 			{
 				LOG("{}\n", static_cast<const void*>(stm));
 			}
