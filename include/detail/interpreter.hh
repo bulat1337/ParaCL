@@ -1,43 +1,45 @@
 #pragma once
 
-#include "node.hh"
 #include "context.hh"
-#include "log.h"
+#include "log.hh"
+#include "node.hh"
+#include "visitor.hh"
 
 namespace AST
+{
+
+namespace detail
 {
 
 class Interpreter final : public Visitor
 {
   private:
-	detail::Context ctx_;
-	int buf_{};
+    detail::Context ctx_;
+    int buf_{};
 
   public:
-	Interpreter(std::ostream& out = std::cout):
-		ctx_(out) {}
+    Interpreter(std::ostream &out = std::cout)
+        : ctx_(out)
+    {}
 
-	void visit(const ConstantNode& node) override
-	{
-		buf_ = node.getVal();
-	}
+    void visit(const ConstantNode &node) override { buf_ = node.getVal(); }
 
-	void visit(const VariableNode& node) override
-	{
-		std::string_view name = node.getName();
+    void visit(const VariableNode &node) override
+    {
+        std::string_view name = node.getName();
         LOG("Evaluating variable: {}\n", name);
 
         buf_ = ctx_.getVarValue(name);
-	}
+    }
 
-	void visit(const BinaryOpNode& node) override
-	{
-       	MSG("Evaluating Binary Operation\n");
+    void visit(const BinaryOpNode &node) override
+    {
+        MSG("Evaluating Binary Operation\n");
 
-		node.accept_left(*this);
+        node.accept_left(*this);
         int leftVal = buf_;
 
-		node.accept_right(*this);
+        node.accept_right(*this);
         int rightVal = buf_;
 
         int result = 0;
@@ -107,10 +109,10 @@ class Interpreter final : public Visitor
         LOG("It's {}\n", result);
 
         buf_ = result;
-	}
+    }
 
-	void visit(const ScopeNode& node) override
-	{
+    void visit(const ScopeNode &node) override
+    {
         if (node.empty())
             return;
 
@@ -141,37 +143,37 @@ class Interpreter final : public Visitor
 
         LOG("ctx_.curScope_ = {}\n", ctx_.curScope_);
         LOG("ctx_.varTables_ size = {}\n", ctx_.varTables_.size());
-	}
+    }
 
-	void visit(const UnaryOpNode& node) override
-	{
-		MSG("Evaluating Unary Operation\n");
+    void visit(const UnaryOpNode &node) override
+    {
+        MSG("Evaluating Unary Operation\n");
 
-		node.acceptOperand(*this);
+        node.acceptOperand(*this);
         int operandVal = buf_;
 
         switch (node.getOp())
         {
             case UnaryOp::NEG:
                 buf_ = -operandVal;
-				break;
+                break;
 
             case UnaryOp::NOT:
                 buf_ = !operandVal;
-				break;
+                break;
 
             default:
                 throw std::runtime_error("Unknown unary operation");
         }
-	}
+    }
 
-	void visit(const AssignNode& node) override
-	{
+    void visit(const AssignNode &node) override
+    {
         MSG("Evaluating assignment\n");
 
         MSG("Getting assigned value\n");
 
-		node.acceptExpr(*this);
+        node.acceptExpr(*this);
         int value = buf_;
 
         LOG("Assigned value is {}\n", value);
@@ -181,30 +183,30 @@ class Interpreter final : public Visitor
         ctx_.get_variable(destName) = value;
 
         buf_ = value;
-	}
+    }
 
-	void visit(const WhileNode& node) override
-	{
-		// node.acceptCond(*this);
-		// int cond = buf_;
+    void visit(const WhileNode &node) override
+    {
+        // node.acceptCond(*this);
+        // int cond = buf_;
 
-		while (node.acceptCond(*this), buf_)
+        while (node.acceptCond(*this), buf_)
         {
-			node.acceptScope(*this);
+            node.acceptScope(*this);
         }
-	}
+    }
 
-	void visit(const IfElseNode& node) override
-	{
-		if (!node.hasCond())
+    void visit(const IfElseNode &node) override
+    {
+        if (!node.hasCond())
         {
             // if there is no condition do it
-			node.acceptAction(*this);
+            node.acceptAction(*this);
             return;
         }
 
-		node.acceptCond(*this);
-		int cond = buf_;
+        node.acceptCond(*this);
+        int cond = buf_;
 
         if (cond)
         {
@@ -215,20 +217,20 @@ class Interpreter final : public Visitor
             if (node.hasAltAction())
                 node.acceptAltAction(*this);
         }
-	}
+    }
 
-	void visit(const PrintNode& node) override
-	{
+    void visit(const PrintNode &node) override
+    {
         MSG("Evaluation print\n");
 
-		node.acceptExpr(*this);
+        node.acceptExpr(*this);
         int value = buf_;
 
         ctx_.out << value << '\n';
-	}
+    }
 
-	void visit([[maybe_unused]]const InNode& node) override
-	{
+    void visit([[maybe_unused]] const InNode &node) override
+    {
         int value = 0;
 
         std::cin >> value;
@@ -239,8 +241,9 @@ class Interpreter final : public Visitor
         }
 
         buf_ = value;
-	}
-
+    }
 };
+
+}; // namespace detail
 
 }; // namespace AST

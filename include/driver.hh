@@ -1,6 +1,4 @@
-
-#ifndef DRIVER_HH
-#define DRIVER_HH
+#pragma once
 
 #include <ostream>
 #include <string>
@@ -34,10 +32,7 @@ class Driver final
         stm_table_.push_back(std::vector<AST::StmtPtr>());
     }
 
-	const AST::ScopeNode* getGlobalScope() const
-	{
-		return ast_.globalScope;
-	}
+    const AST::ScopeNode *getGlobalScope() const { return ast_.globalScope; }
 
     void eval() { ast_.eval(); }
 
@@ -99,4 +94,3 @@ class Driver final
 
     void scan_end() { fclose(yyin); }
 };
-#endif // DRIVER_HH

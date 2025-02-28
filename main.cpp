@@ -3,7 +3,7 @@
 
 #include "ast.hh"    // for AST
 #include "driver.hh" // for Driver
-#include "log.h"     // for LOG, MSG
+#include "log.hh"    // for LOG, MSG
 
 int main(int argc, char **argv)
 {

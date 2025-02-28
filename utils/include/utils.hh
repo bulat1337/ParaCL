@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 namespace matrix
 {
@@ -32,5 +31,3 @@ inline int cmp_double(double lhs, double rhs)
 }; // namespace utils
 
 }; // namespace matrix
-
-#endif // UTILS_H

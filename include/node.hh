@@ -1,8 +1,8 @@
-#ifndef NODE_HH
-#define NODE_HH
+#pragma once
 
 #include "context.hh"
-#include "log.h"
+#include "log.hh"
+#include "visitor.hh"
 
 #include <cmath>
 #include <cstdint>
@@ -41,38 +41,10 @@ enum class UnaryOp
     NOT,
 };
 
-class ConstantNode;
-class VariableNode;
-class BinaryOpNode;
-class ScopeNode;
-class UnaryOpNode;
-class AssignNode;
-class WhileNode;
-class IfElseNode;
-class PrintNode;
-class InNode;
-
-class Visitor
-{
-  public:
-	virtual void visit(const ConstantNode& node) = 0;
-	virtual void visit(const VariableNode& node) = 0;
-	virtual void visit(const BinaryOpNode& node) = 0;
-	virtual void visit(const ScopeNode& node) = 0;
-	virtual void visit(const UnaryOpNode& node) = 0;
-	virtual void visit(const AssignNode& node) = 0;
-	virtual void visit(const WhileNode& node) = 0;
-	virtual void visit(const IfElseNode& node) = 0;
-	virtual void visit(const PrintNode& node) = 0;
-	virtual void visit(const InNode& node) = 0;
-
-	virtual ~Visitor() = default;
-};
-
 class INode
 {
   public:
-	virtual void accept(Visitor& visitor) const = 0;
+    virtual void accept(detail::Visitor &visitor) const = 0;
 
     virtual ~INode() = default;
 };
@@ -105,21 +77,18 @@ class ScopeNode final : public StatementNode
         : children_(std::move(stms))
     {}
 
-	const std::vector<StmtPtr> getChildren() const
-	{
-		return children_;
-	}
+    const std::vector<StmtPtr> getChildren() const { return children_; }
 
-	bool empty() const { return children_.empty(); }
+    bool empty() const { return children_.empty(); }
 
     void pushChild(StmtPtr stmt) { children_.push_back(stmt); }
 
     size_t nstms() const { return children_.size(); }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 using ScopePtr = ScopeNode *;
@@ -136,10 +105,10 @@ class ConstantNode final : public ExpressionNode
 
     int getVal() const { return val_; }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 class VariableNode final : public ExpressionNode
@@ -154,10 +123,10 @@ class VariableNode final : public ExpressionNode
 
     std::string_view getName() const { return name_; }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 using VariablePtr = VariableNode *;
@@ -170,17 +139,14 @@ class BinaryOpNode final : public ExpressionNode
     BinaryOp op_{};
 
   public:
-	void accept_left(Visitor& visitor) const
-	{
-		left_->accept(visitor);
-	}
+    void accept_left(detail::Visitor &visitor) const { left_->accept(visitor); }
 
-	void accept_right(Visitor& visitor) const
-	{
-		right_->accept(visitor);
-	}
+    void accept_right(detail::Visitor &visitor) const
+    {
+        right_->accept(visitor);
+    }
 
-	BinaryOp getOp() const { return op_; }
+    BinaryOp getOp() const { return op_; }
 
     BinaryOpNode(ExprPtr left, BinaryOp op, ExprPtr right)
         : left_(left)
@@ -188,10 +154,10 @@ class BinaryOpNode final : public ExpressionNode
         , op_(op)
     {}
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 class UnaryOpNode final : public ExpressionNode
@@ -206,20 +172,17 @@ class UnaryOpNode final : public ExpressionNode
         , op_(op)
     {}
 
-	void acceptOperand(Visitor& visitor) const
-	{
-		operand_->accept(visitor);
-	}
+    void acceptOperand(detail::Visitor &visitor) const
+    {
+        operand_->accept(visitor);
+    }
 
-	UnaryOp getOp() const
-	{
-		return op_;
-	}
+    UnaryOp getOp() const { return op_; }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 class AssignNode final : public ExpressionNode
@@ -234,20 +197,14 @@ class AssignNode final : public ExpressionNode
         , expr_(expr)
     {}
 
-	void acceptExpr(Visitor& visitor) const
-	{
-		expr_->accept(visitor);
-	}
+    void acceptExpr(detail::Visitor &visitor) const { expr_->accept(visitor); }
 
-	std::string_view getDestName() const
-	{
-		return dest_->getName();
-	}
+    std::string_view getDestName() const { return dest_->getName(); }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 class WhileNode final : public ConditionalStatementNode
@@ -262,20 +219,17 @@ class WhileNode final : public ConditionalStatementNode
         , scope_(scope)
     {}
 
-	void acceptCond(Visitor& visitor) const
-	{
-		cond_->accept(visitor);
-	}
+    void acceptCond(detail::Visitor &visitor) const { cond_->accept(visitor); }
 
-	void acceptScope(Visitor& visitor) const
-	{
-		scope_->accept(visitor);
-	}
+    void acceptScope(detail::Visitor &visitor) const
+    {
+        scope_->accept(visitor);
+    }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 class IfElseNode final : public StatementNode
@@ -301,35 +255,26 @@ class IfElseNode final : public StatementNode
         : action_(action)
     {}
 
-	bool hasCond() const
-	{
-		return cond_ != nullptr;
-	}
+    bool hasCond() const { return cond_ != nullptr; }
 
-	bool hasAltAction() const
-	{
-		return alt_action_ != nullptr;
-	}
+    bool hasAltAction() const { return alt_action_ != nullptr; }
 
-	void acceptCond(Visitor& visitor) const
-	{
-		cond_->accept(visitor);
-	}
+    void acceptCond(detail::Visitor &visitor) const { cond_->accept(visitor); }
 
-	void acceptAction(Visitor& visitor) const
-	{
-		action_->accept(visitor);
-	}
+    void acceptAction(detail::Visitor &visitor) const
+    {
+        action_->accept(visitor);
+    }
 
-	void acceptAltAction(Visitor& visitor) const
-	{
-		alt_action_->accept(visitor);
-	}
+    void acceptAltAction(detail::Visitor &visitor) const
+    {
+        alt_action_->accept(visitor);
+    }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 class PrintNode final : public StatementNode
@@ -342,26 +287,21 @@ class PrintNode final : public StatementNode
         : expr_(expr)
     {}
 
-	void acceptExpr(Visitor& visitor) const
-	{
-		expr_->accept(visitor);
-	}
+    void acceptExpr(detail::Visitor &visitor) const { expr_->accept(visitor); }
 
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 class InNode final : public ExpressionNode
 {
   public:
-	void accept(Visitor& visitor) const override
-	{
-		visitor.visit(*this);
-	}
+    void accept(detail::Visitor &visitor) const override
+    {
+        visitor.visit(*this);
+    }
 };
 
 } // namespace AST
-
-#endif // ! NODE_HH

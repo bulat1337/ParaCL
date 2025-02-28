@@ -27,7 +27,7 @@
 {
 	#include <memory>
 
-	#include "log.h"
+	#include "log.hh"
 	#include "driver.hh"
 
 	#include <exception>

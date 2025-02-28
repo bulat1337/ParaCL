@@ -4,7 +4,7 @@
 #include <string>        // for basic_string
 #include <vector>
 
-#include "test_utils.h" // for run_test
+#include "test_utils.hh" // for run_test
 
 TEST(common, basic_1) { test_utils::run_test("/common/basic_1"); }
 

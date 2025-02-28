@@ -1,5 +1,4 @@
-#ifndef CONTEXT_HH
-#define CONTEXT_HH
+#pragma once
 
 #include <cstdint>
 #include <iostream>
@@ -8,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "log.h"
+#include "log.hh"
 
 namespace AST
 {
@@ -51,7 +50,7 @@ class Context final
                                  "\n");
     }
 
-    auto& get_variable(std::string_view destName)
+    auto &get_variable(std::string_view destName)
     {
         int32_t scopeId = 0;
 
@@ -68,5 +67,3 @@ class Context final
 
 } // namespace detail
 } // namespace AST
-
-#endif // !CONTEXT_HH
