@@ -376,7 +376,7 @@ UnaryOp	: 	"-" Expr %prec UMINUS
 Variable: 	ID
 			{
 				MSG("Initialising AST::VariableNode\n");
-				$$ = drv.construct<AST::VariableNode>(std::string($1));
+				$$ = drv.construct<AST::VariableNode>(drv.intern_name($1));
 			};
 
 %%
