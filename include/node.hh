@@ -41,6 +41,20 @@ enum class UnaryOp
     NOT,
 };
 
+class ConstantNode;
+class VariableNode;
+
+class Visitor
+{
+  public:
+	virtual void visit(const ConstantNode& node) = 0;
+	virtual void visit(const VariableNode& node) = 0;
+
+
+
+	virtual ~Visitor() = default;
+};
+
 class INode
 {
   public:
@@ -140,6 +154,11 @@ class ConstantNode final : public ExpressionNode
     }
 
     int getVal() const { return val_; }
+
+	void accept(Visitor& visitor)
+	{
+		visitor.visit(*this);
+	}
 };
 
 class VariableNode final : public ExpressionNode
@@ -415,6 +434,30 @@ class InNode final : public ExpressionNode
         return value;
     }
 };
+
+class Interpreter : public Visitor
+{
+  private:
+	detail::Context ctx_;
+	int buf_{};
+
+  public:
+	void visit(const ConstantNode& node) override
+	{
+		buf_ = node.getVal();
+	}
+
+	void visit(const VariableNode& node) override
+	{
+		std::string_view name = node.getName();
+        LOG("Evaluating variable: {}\n", name);
+
+        buf_ = ctx_.getVarValue(name);
+	}
+
+};
+
+
 
 } // namespace AST
 

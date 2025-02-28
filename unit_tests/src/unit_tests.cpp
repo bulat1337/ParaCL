@@ -81,10 +81,11 @@ TEST(common, mod) { test_utils::run_test("/common/mod"); }
 
 TEST(ASTTest, CreateConstant)
 {
+	AST::detail::Context dummy_ctx;
     AST::AST ast;
     auto constNode = ast.construct<AST::ConstantNode>(42);
     ASSERT_NE(constNode, nullptr);
-    EXPECT_EQ(constNode->getVal(), 42);
+    EXPECT_EQ(constNode->eval_value(dummy_ctx), 42);
 }
 
 TEST(ASTTest, CreateVariable)
