@@ -1,6 +1,4 @@
-
-#ifndef DRIVER_HH
-#define DRIVER_HH
+#pragma once
 
 #include <ostream>
 #include <string>
@@ -34,6 +32,8 @@ class Driver final
         stm_table_.push_back(std::vector<AST::StmtPtr>());
     }
 
+    const AST::ScopeNode *getGlobalScope() const { return ast_.globalScope; }
+
     void eval() { ast_.eval(); }
 
     template <typename NodeType, typename... Args>
@@ -56,7 +56,14 @@ class Driver final
 
     void form_global_scope() { ast_.globalScope = form_scope(); }
 
-    std::string_view intern_name(const std::string& name)
+    int getInterpreterBuf() const { return ast_.getInterpreterBuf(); }
+
+    bool varInitialized(std::string_view varName) const
+    {
+        return ast_.varInitialized(varName);
+    }
+
+    std::string_view intern_name(std::string_view name)
     {
         return ast_.intern_name(name);
     }
@@ -94,4 +101,3 @@ class Driver final
 
     void scan_end() { fclose(yyin); }
 };
-#endif // DRIVER_HH

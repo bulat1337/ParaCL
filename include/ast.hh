@@ -1,8 +1,8 @@
-#ifndef AST_HH
-#define AST_HH
+#pragma once
 
+#include "interpreter.hh"
+#include "log.hh"
 #include "node.hh"
-#include "log.h"
 
 #include <memory>
 #include <string>
@@ -16,47 +16,52 @@ namespace AST
 
 class AST final
 {
-public:
-    ScopeNode* globalScope;
+  public:
+    ScopeNode *globalScope;
 
-private:
-
+  private:
     std::vector<std::unique_ptr<INode>> data_;
 
     std::unordered_set<std::string> NamePool_;
 
-    detail::Context ctx;
+    detail::Interpreter interpreter_;
 
-public:
-	AST(std::ostream& out = std::cout):
-		ctx(out) {}
+  public:
+    AST(std::ostream &out = std::cout)
+        : interpreter_(out)
+    {}
 
     void eval()
     {
-		MSG("Evaluating global scope\n");
-        globalScope->eval(ctx);
+        MSG("Evaluating global scope\n");
+        interpreter_.visit(*globalScope);
     }
 
-	template <typename NodeType, typename... Args>
-	NodeType* construct(Args&&... args)
-	{
-		auto node_ptr = std::make_unique<NodeType>(std::forward<Args>(args)...);
-
-		auto raw_data = node_ptr.get();
-
-		data_.push_back(std::move(node_ptr));
-
-		return raw_data;
-	}
-
-    std::string_view intern_name(const std::string& name)
+    template <typename NodeType, typename... Args>
+    NodeType *construct(Args &&...args)
     {
-        auto it = NamePool_.insert(name).first; 
-    
+        auto node_ptr = std::make_unique<NodeType>(std::forward<Args>(args)...);
+
+        auto raw_data = node_ptr.get();
+
+        data_.push_back(std::move(node_ptr));
+
+        return raw_data;
+    }
+
+    std::string_view intern_name(std::string_view name)
+    {
+        const auto it = NamePool_.insert(std::string(name)).first;
+
         return *it;
+    }
+
+    int getInterpreterBuf() const { return interpreter_.getBuf(); }
+
+    bool varInitialized(std::string_view varName) const
+    {
+        return interpreter_.varInitialized(varName);
     }
 };
 
 } // namespace AST
-
-#endif // !AST_HH

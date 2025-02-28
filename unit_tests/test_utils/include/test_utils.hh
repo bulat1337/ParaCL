@@ -1,10 +1,9 @@
-#ifndef TEST_UTILS_H
-#define TEST_UTILS_H
+#pragma once
 
 #include <gtest/gtest.h>
 
-#include "log.h"
-#include "test_utils_detail.h"
+#include "log.hh"
+#include "test_utils_detail.hh"
 
 namespace test_utils
 {
@@ -23,5 +22,3 @@ void run_test(const std::string &test_name)
 }
 
 } // namespace test_utils
-
-#endif

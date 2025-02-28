@@ -1,10 +1,11 @@
 #include "ast.hh"
+#include "interpreter.hh"
 #include "node.hh"
+#include "test_utils.hh" // for run_test
+
 #include <gtest/gtest.h> // for Test, TestInfo (ptr only), TEST
 #include <string>        // for basic_string
 #include <vector>
-
-#include "test_utils.h" // for run_test
 
 TEST(common, basic_1) { test_utils::run_test("/common/basic_1"); }
 
@@ -82,9 +83,13 @@ TEST(common, mod) { test_utils::run_test("/common/mod"); }
 TEST(ASTTest, CreateConstant)
 {
     AST::AST ast;
-    auto constNode = ast.construct<AST::ConstantNode>(42);
+    const auto constNode = ast.construct<AST::ConstantNode>(42);
+
+    AST::detail::Interpreter interpreter;
+
     ASSERT_NE(constNode, nullptr);
-    EXPECT_EQ(constNode->getVal(), 42);
+    interpreter.visit(*constNode);
+    EXPECT_EQ(interpreter.getBuf(), 42);
 }
 
 TEST(ASTTest, CreateVariable)
@@ -98,62 +103,62 @@ TEST(ASTTest, CreateVariable)
 TEST(ASTTest, CreateBinaryOpADD)
 {
     AST::AST ast;
-    auto lhs = ast.construct<AST::ConstantNode>(1000);
-    auto rhs = ast.construct<AST::ConstantNode>(7);
-    auto binOpNode =
+    const auto lhs = ast.construct<AST::ConstantNode>(1000);
+    const auto rhs = ast.construct<AST::ConstantNode>(7);
+    const auto binOpNode =
         ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::ADD, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
 
-    EXPECT_EQ(result, 1007);
+    EXPECT_EQ(interpreter.getBuf(), 1007);
 }
 
 TEST(ASTTest, CreateBinaryOpSUB)
 {
     AST::AST ast;
-    auto lhs = ast.construct<AST::ConstantNode>(1000);
-    auto rhs = ast.construct<AST::ConstantNode>(7);
-    auto binOpNode =
+    const auto lhs = ast.construct<AST::ConstantNode>(1000);
+    const auto rhs = ast.construct<AST::ConstantNode>(7);
+    const auto binOpNode =
         ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::SUB, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 993);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 993);
 }
 
 TEST(ASTTest, CreateBinaryOpMUL)
 {
     AST::AST ast;
-    auto lhs = ast.construct<AST::ConstantNode>(15);
-    auto rhs = ast.construct<AST::ConstantNode>(3);
-    auto binOpNode =
+    const auto lhs = ast.construct<AST::ConstantNode>(15);
+    const auto rhs = ast.construct<AST::ConstantNode>(3);
+    const auto binOpNode =
         ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::MUL, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 45);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 45);
 }
 
 TEST(ASTTest, CreateBinaryOpDIV)
 {
     AST::AST ast;
-    auto lhs = ast.construct<AST::ConstantNode>(42);
-    auto rhs = ast.construct<AST::ConstantNode>(6);
-    auto binOpNode =
+    const auto lhs = ast.construct<AST::ConstantNode>(42);
+    const auto rhs = ast.construct<AST::ConstantNode>(6);
+    const auto binOpNode =
         ast.construct<AST::BinaryOpNode>(lhs, AST::BinaryOp::DIV, rhs);
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 7);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 7);
 }
 
 TEST(ASTTest, CreateBinaryOpDIVByZero)
@@ -166,8 +171,8 @@ TEST(ASTTest, CreateBinaryOpDIVByZero)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    EXPECT_THROW(binOpNode->eval_value(ctx), std::runtime_error);
+    AST::detail::Interpreter interpreter;
+    EXPECT_THROW(interpreter.visit(*binOpNode), std::runtime_error);
 }
 
 TEST(ASTTest, CreateBinaryOpMOD)
@@ -180,9 +185,9 @@ TEST(ASTTest, CreateBinaryOpMOD)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateBinaryOpAND)
@@ -195,10 +200,10 @@ TEST(ASTTest, CreateBinaryOpAND)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
 
-    EXPECT_EQ(result, 0);
+    EXPECT_EQ(interpreter.getBuf(), 0);
 }
 
 TEST(ASTTest, CreateBinaryOpOR)
@@ -211,9 +216,9 @@ TEST(ASTTest, CreateBinaryOpOR)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateBinaryOpLESS)
@@ -226,9 +231,9 @@ TEST(ASTTest, CreateBinaryOpLESS)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateBinaryOpLESSorEQUAL)
@@ -241,9 +246,9 @@ TEST(ASTTest, CreateBinaryOpLESSorEQUAL)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateBinaryOpGREATER)
@@ -256,9 +261,9 @@ TEST(ASTTest, CreateBinaryOpGREATER)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateBinaryOpGREATERorEQUAL)
@@ -271,9 +276,9 @@ TEST(ASTTest, CreateBinaryOpGREATERorEQUAL)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateBinaryOpEQ)
@@ -286,9 +291,9 @@ TEST(ASTTest, CreateBinaryOpEQ)
 
     ASSERT_NE(binOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = binOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*binOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateUnaryOpNEG)
@@ -300,9 +305,9 @@ TEST(ASTTest, CreateUnaryOpNEG)
 
     ASSERT_NE(unaryOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = unaryOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 42);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*unaryOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 42);
 }
 
 TEST(ASTTest, CreateUnaryOpNOT)
@@ -314,115 +319,131 @@ TEST(ASTTest, CreateUnaryOpNOT)
 
     ASSERT_NE(unaryOpNode, nullptr);
 
-    AST::detail::Context ctx;
-    int result = unaryOpNode->eval_value(ctx);
-    EXPECT_EQ(result, 1);
+    AST::detail::Interpreter interpreter;
+    interpreter.visit(*unaryOpNode);
+    EXPECT_EQ(interpreter.getBuf(), 1);
 }
 
 TEST(ASTTest, CreateAssignmentNode)
 {
-    AST::AST ast;
-    auto var = ast.construct<AST::VariableNode>("x");
-    auto expr = ast.construct<AST::ConstantNode>(42);
-    auto assignmentNode = ast.construct<AST::AssignNode>(var, expr);
+    Driver drv;
+    const auto var = drv.construct<AST::VariableNode>("x");
+    const auto expr = drv.construct<AST::ConstantNode>(42);
+    const auto assignmentNode = drv.construct<AST::AssignNode>(var, expr);
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    AST::detail::Context ctx;
-    ctx.varTables_.emplace_back();
-    ctx.curScope_ = 0;
+    drv.cur_scope().push_back(assignmentNode);
+    drv.form_global_scope();
+    drv.eval();
 
-    int result = assignmentNode->eval_value(ctx);
-
-    EXPECT_EQ(result, 42);
+    EXPECT_EQ(drv.getInterpreterBuf(), 42);
 }
 
 TEST(ASTTest, WhileNode_ConditionTrue)
 {
-    AST::AST ast;
-    auto condition = ast.construct<AST::BinaryOpNode>(
-        ast.construct<AST::VariableNode>("x"), AST::BinaryOp::LS,
-        ast.construct<AST::ConstantNode>(10));
-    auto action = ast.construct<AST::AssignNode>(
-        ast.construct<AST::VariableNode>("x"),
-        ast.construct<AST::BinaryOpNode>(ast.construct<AST::VariableNode>("x"),
+    Driver drv;
+
+    const auto var = drv.construct<AST::VariableNode>("x");
+    const auto expr = drv.construct<AST::ConstantNode>(0);
+    const auto assignmentNode = drv.construct<AST::AssignNode>(var, expr);
+
+    ASSERT_NE(assignmentNode, nullptr);
+
+    drv.cur_scope().push_back(assignmentNode);
+
+    const auto condition = drv.construct<AST::BinaryOpNode>(
+        drv.construct<AST::VariableNode>("x"), AST::BinaryOp::LS,
+        drv.construct<AST::ConstantNode>(10));
+    const auto action = drv.construct<AST::AssignNode>(
+        drv.construct<AST::VariableNode>("x"),
+        drv.construct<AST::BinaryOpNode>(drv.construct<AST::VariableNode>("x"),
                                          AST::BinaryOp::ADD,
-                                         ast.construct<AST::ConstantNode>(1)));
-    auto whileNode = ast.construct<AST::WhileNode>(condition, action);
+                                         drv.construct<AST::ConstantNode>(1)));
+    const auto whileNode = drv.construct<AST::WhileNode>(condition, action);
 
     ASSERT_NE(whileNode, nullptr);
 
-    AST::detail::Context ctx;
-    ctx.varTables_.emplace_back();
-    ctx.varTables_[0]["x"] = 0;
-    ctx.curScope_ = 0;
+    drv.cur_scope().push_back(whileNode);
+    drv.form_global_scope();
+    drv.eval();
 
-    whileNode->eval(ctx);
-
-    EXPECT_EQ(ctx.varTables_[0]["x"], 10);
+    EXPECT_EQ(drv.getInterpreterBuf(), 0);
 }
 
 TEST(ASTTest, IfNode_TrueCondition)
 {
-    AST::AST ast;
-    auto condition = ast.construct<AST::BinaryOpNode>(
-        ast.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ,
-        ast.construct<AST::ConstantNode>(10));
-    auto action =
-        ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"),
-                                       ast.construct<AST::ConstantNode>(20));
+    Driver drv;
 
-    auto ifNode = ast.construct<AST::IfElseNode>(condition, action);
+    const auto var = drv.construct<AST::VariableNode>("x");
+    const auto expr = drv.construct<AST::ConstantNode>(10);
+    const auto assignmentNode = drv.construct<AST::AssignNode>(var, expr);
+
+    ASSERT_NE(assignmentNode, nullptr);
+
+    drv.cur_scope().push_back(assignmentNode);
+
+    const auto condition = drv.construct<AST::BinaryOpNode>(
+        drv.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ,
+        drv.construct<AST::ConstantNode>(10));
+    const auto action =
+        drv.construct<AST::AssignNode>(drv.construct<AST::VariableNode>("y"),
+                                       drv.construct<AST::ConstantNode>(20));
+
+    const auto ifNode = drv.construct<AST::IfElseNode>(condition, action);
 
     ASSERT_NE(ifNode, nullptr);
 
-    AST::detail::Context ctx;
-    ctx.varTables_.emplace_back();
-    ctx.varTables_[0]["x"] = 10;
-    ctx.curScope_ = 0;
+    drv.cur_scope().push_back(ifNode);
+    drv.form_global_scope();
+    drv.eval();
 
-    ifNode->eval(ctx);
-
-    EXPECT_EQ(ctx.varTables_[0]["y"], 20);
+    EXPECT_EQ(drv.getInterpreterBuf(), 20);
 }
-
+//
 TEST(ASTTest, IfNode_FalseCondition)
 {
-    AST::AST ast;
-    auto condition = ast.construct<AST::BinaryOpNode>(
-        ast.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ,
-        ast.construct<AST::ConstantNode>(10));
+    Driver drv;
+
+    auto condition = drv.construct<AST::BinaryOpNode>(
+        drv.construct<AST::ConstantNode>(9), AST::BinaryOp::EQ,
+        drv.construct<AST::ConstantNode>(10));
     auto action =
-        ast.construct<AST::AssignNode>(ast.construct<AST::VariableNode>("y"),
-                                       ast.construct<AST::ConstantNode>(20));
-    auto ifNode = ast.construct<AST::IfElseNode>(condition, action);
+        drv.construct<AST::AssignNode>(drv.construct<AST::VariableNode>("y"),
+                                       drv.construct<AST::ConstantNode>(20));
+    auto ifNode = drv.construct<AST::IfElseNode>(condition, action);
 
     ASSERT_NE(ifNode, nullptr);
-    AST::detail::Context ctx;
-    ctx.varTables_.emplace_back();
-    ctx.varTables_[0]["x"] = 5;
-    ctx.curScope_ = 0;
 
-    ifNode->eval(ctx);
+    drv.cur_scope().push_back(ifNode);
+    drv.form_global_scope();
+    drv.eval();
 
-    EXPECT_EQ(ctx.varTables_[0].count("y"), 0);
+    EXPECT_EQ(drv.varInitialized("y"), false);
 }
 
 TEST(ASTTest, PrintNode)
 {
-    AST::AST ast;
+    std::stringstream out;
+
+    Driver drv(out);
+
+    const auto var = drv.construct<AST::VariableNode>("x");
+    const auto expr = drv.construct<AST::ConstantNode>(42);
+    const auto assignmentNode = drv.construct<AST::AssignNode>(var, expr);
+
+    ASSERT_NE(assignmentNode, nullptr);
+
+    drv.cur_scope().push_back(assignmentNode);
+
     auto printNode =
-        ast.construct<AST::PrintNode>(ast.construct<AST::VariableNode>("x"));
+        drv.construct<AST::PrintNode>(drv.construct<AST::VariableNode>("x"));
 
     ASSERT_NE(printNode, nullptr);
-    std::stringstream ss;
-    AST::detail::Context ctx(ss);
 
-    ctx.varTables_.emplace_back();
-    ctx.varTables_[0]["x"] = 42;
-    ctx.curScope_ = 0;
+    drv.cur_scope().push_back(printNode);
+    drv.form_global_scope();
+    drv.eval();
 
-    printNode->eval(ctx);
-
-    EXPECT_EQ(ss.str(), "42\n");
+    EXPECT_EQ(out.str(), "42\n");
 }

@@ -1,5 +1,4 @@
-#ifndef TEST_UTILS_DETAIL
-#define TEST_UTILS_DETAIL
+#pragma once
 
 #include "driver.hh"
 
@@ -50,5 +49,3 @@ inline std::string get_answer(std::string_view file_name)
 }; // namespace detail
 
 }; // namespace test_utils
-
-#endif // TEST_UTILS_DETAILS

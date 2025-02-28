@@ -1,5 +1,4 @@
-#ifndef LOG_H
-#define LOG_H
+#pragma once
 
 #if defined __has_include
 #if __has_include(<format>)
@@ -55,5 +54,3 @@
 
 #endif // __has_include(<format>)
 #endif // defined __has_include
-
-#endif
