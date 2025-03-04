@@ -120,12 +120,7 @@ class Interpreter final : public Visitor
 
         MSG("Evaluating scope\n");
 
-        ++ctx_.curScope_;
-
         ctx_.varTables_.push_back(detail::Context::VarTable());
-
-        LOG("ctx_.curScope_ = {}\n", ctx_.curScope_);
-        LOG("ctx_.varTables_ size = {}\n", ctx_.varTables_.size());
 
         MSG("Scopes children:\n");
         for ([[maybe_unused]] const auto &child : node.getChildren())
@@ -140,11 +135,6 @@ class Interpreter final : public Visitor
         }
 
         ctx_.varTables_.pop_back();
-
-        --ctx_.curScope_;
-
-        LOG("ctx_.curScope_ = {}\n", ctx_.curScope_);
-        LOG("ctx_.varTables_ size = {}\n", ctx_.varTables_.size());
     }
 
     void visit(const UnaryOpNode &node) override
