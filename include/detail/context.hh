@@ -22,7 +22,6 @@ class Context final
 
   public:
     std::vector<VarTable> varTables_;
-    int32_t curScope_ = -1;
     std::ostream &out;
 
   public:
@@ -32,7 +31,7 @@ class Context final
 
     int getVarValue(std::string_view name) const
     {
-        auto iter = varTables_.rbegin() + (varTables_.size() - curScope_ - 1);
+        auto iter = varTables_.rbegin();
         auto rend = varTables_.rend();
 
         for (; iter != rend; ++iter)
@@ -54,7 +53,7 @@ class Context final
     {
         int32_t scopeId = 0;
 
-        while (scopeId < curScope_)
+        while (scopeId < static_cast<int32_t>(varTables_.size()) - 1)
         {
             if (varTables_[scopeId].contains(destName))
                 break;

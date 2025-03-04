@@ -77,7 +77,7 @@ class ScopeNode final : public StatementNode
         : children_(std::move(stms))
     {}
 
-    const std::vector<StmtPtr> getChildren() const { return children_; }
+    const std::vector<StmtPtr>& getChildren() const { return children_; }
 
     bool empty() const { return children_.empty(); }
 
