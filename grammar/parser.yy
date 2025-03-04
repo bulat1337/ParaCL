@@ -210,30 +210,19 @@ If_Stm: 	IF "(" Expr ")" Statement
 				$$ = drv.construct<AST::IfElseNode>($3, $5, $6);
 			}
 
-Else_Like:	Else
-			{
-				$$ = $1;
-			}
-		|	Else_If
-			{
-				$$ = $1;
-			}
-		;
-
-Else:		ELSE Statement
+Else_Like:	ELSE Statement
 			{
 				$$ = drv.construct<AST::IfElseNode>($2);
 			}
-
-Else_If:	ELSEIF "(" Expr ")" Statement
+		|	ELSEIF "(" Expr ")" Statement
 			{
 				$$ = drv.construct<AST::IfElseNode>($3, $5);
 			}
-	  |		ELSEIF "(" Expr ")" Statement Else_Like
-	  		{
+		|	ELSEIF "(" Expr ")" Statement Else_Like
+			{
 				$$ = drv.construct<AST::IfElseNode>($3, $5, $6);
 			}
-	  ;
+		;
 
 While_Stm:	WHILE "(" Expr ")" Statement
 			{
