@@ -13,7 +13,7 @@ namespace test_utils
 namespace detail
 {
 
-std::string get_result(std::string_view file_name)
+std::string getResult(std::string_view file_name)
 {
     int status = 0;
 
@@ -30,7 +30,7 @@ std::string get_result(std::string_view file_name)
     return result.str();
 }
 
-inline std::string get_answer(std::string_view file_name)
+inline std::string getAnswer(std::string_view file_name)
 {
     std::ifstream answer_file{std::string(file_name)};
 

@@ -73,11 +73,11 @@
 %nterm <AST::AssignNode*> 		Assign
 %nterm <AST::ScopeNode*> 		Scope
 %nterm <AST::PrintNode*> 		Print
-%nterm <AST::IfElseNode*> 		If_Stm
-%nterm <AST::IfElseNode*> 		Else_Like
+%nterm <AST::IfElseNode*> 		IfStm
+%nterm <AST::IfElseNode*> 		ElseLike
 %nterm <AST::IfElseNode*> 		Else
 %nterm <AST::IfElseNode*> 		Else_If
-%nterm <AST::WhileNode*> 		While_Stm
+%nterm <AST::WhileNode*> 		WhileStm
 %nterm <AST::VariableNode*> 	Variable
 
 %nterm <AST::StatementNode*>	Statement
@@ -96,12 +96,12 @@
 Program: 	Statements YYEOF
 	   		{
 				MSG("Initialising global scope with vector of statements:\n");
-				for ([[maybe_unused]]const auto& stm : drv.cur_scope())
+				for ([[maybe_unused]]const auto& stm : drv.curScope())
 				{
 					LOG("{}\n", static_cast<const void*>(stm));
 				}
 
-				drv.form_global_scope();
+				drv.formGlobalScope();
 			}
 	   ;
 
@@ -113,9 +113,9 @@ Statements: Statement
 					static_cast<const void*>(stm));
 
 
-				drv.cur_scope().push_back(stm);
+				drv.curScope().push_back(stm);
 			}
-		  | Statements Statement
+		|	Statements Statement
 		  	{
 				auto stm = $2;
 
@@ -123,17 +123,17 @@ Statements: Statement
 					static_cast<const void*>(stm));
 
 
-				drv.cur_scope().push_back(stm);
+				drv.curScope().push_back(stm);
 			}
-		  | /* nothing */
+		| 	/* nothing */
 		  	{
 				MSG("Void statement\n");
 			}
-		  |	";"
+		|	";"
 		 	{
 				MSG("Lone semicolon\n");
 			}
-		  ;
+		;
 
 Statement:	Expr ";"
 			{
@@ -142,57 +142,57 @@ Statement:	Expr ";"
 
 				$$ = $1;
 			}
-		 | 	Scope
+		| 	Scope
 		 	{
 				LOG("It's Scope. Moving from concrete rule: {}\n",
 					static_cast<const void*>($$));
 
 				$$ = $1;
 			}
-		 | 	If_Stm
+		| 	IfStm
 		 	{
-				LOG("It's If_Stm. Moving from concrete rule: {}\n",
+				LOG("It's IfStm. Moving from concrete rule: {}\n",
 					static_cast<const void*>($$));
 
 				$$ = $1;
 			}
 		|
-			While_Stm
+			WhileStm
 			{
-				LOG("It's While_Stm. Moving from concrete rule: {}\n",
+				LOG("It's WhileStm. Moving from concrete rule: {}\n",
 					static_cast<const void*>($$));
 
 				$$ = $1;
 			}
-		 | 	Print ";"
+		| 	Print ";"
 		 	{
 				LOG("It's Print. Moving from concrete rule: {}\n",
 					static_cast<const void*>($$));
 
 				$$ = $1;
 			}
-		 ;
+		;
 
 Scope: 	StartScope Statements EndScope
 		{
 			MSG("Initialising scope with vector of statements:\n");
-			for ([[maybe_unused]]const auto& stm : drv.cur_scope())
+			for ([[maybe_unused]]const auto& stm : drv.curScope())
 			{
 				LOG("{}\n", static_cast<const void*>(stm));
 			}
 
-			$$ = drv.form_scope();
+			$$ = drv.formScope();
 
 			MSG("Scope end.\n");
 
-			drv.pop_scope();
+			drv.popScope();
 		};
 
 StartScope: "{"
 			{
 				MSG("Scope start.\n");
 
-				drv.init_scope();
+				drv.initScope();
 			};
 
 EndScope: 	"}"
@@ -200,17 +200,17 @@ EndScope: 	"}"
 
 			};
 
-If_Stm: 	IF "(" Expr ")" Statement
+IfStm: 	IF "(" Expr ")" Statement
 			{
 				MSG("Initialising if statement\n");
 				$$ = drv.construct<AST::IfElseNode>($3, $5);
 			}
-	    |	IF "(" Expr ")" Statement Else_Like
+	    |	IF "(" Expr ")" Statement ElseLike
 	  		{
 				$$ = drv.construct<AST::IfElseNode>($3, $5, $6);
 			}
 
-Else_Like:	ELSE Statement
+ElseLike:	ELSE Statement
 			{
 				$$ = drv.construct<AST::IfElseNode>($2);
 			}
@@ -218,13 +218,13 @@ Else_Like:	ELSE Statement
 			{
 				$$ = drv.construct<AST::IfElseNode>($3, $5);
 			}
-		|	ELSEIF "(" Expr ")" Statement Else_Like
+		|	ELSEIF "(" Expr ")" Statement ElseLike
 			{
 				$$ = drv.construct<AST::IfElseNode>($3, $5, $6);
 			}
 		;
 
-While_Stm:	WHILE "(" Expr ")" Statement
+WhileStm:	WHILE "(" Expr ")" Statement
 			{
 				MSG("Initialising while statement\n");
 				$$ = drv.construct<AST::WhileNode>($3, $5);
@@ -365,7 +365,7 @@ UnaryOp	: 	"-" Expr %prec UMINUS
 Variable: 	ID
 			{
 				MSG("Initialising AST::VariableNode\n");
-				$$ = drv.construct<AST::VariableNode>(drv.intern_name($1));
+				$$ = drv.construct<AST::VariableNode>(drv.internName($1));
 			};
 
 %%

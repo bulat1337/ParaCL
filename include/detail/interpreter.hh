@@ -172,7 +172,7 @@ class Interpreter final : public Visitor
 
         std::string_view destName = node.getDestName();
 
-        ctx_.get_variable(destName) = value;
+        ctx_.getVar(destName) = value;
 
         buf_ = value;
     }

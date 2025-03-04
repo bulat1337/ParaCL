@@ -333,8 +333,8 @@ TEST(ASTTest, CreateAssignmentNode)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(assignmentNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.getInterpreterBuf(), 42);
@@ -350,7 +350,7 @@ TEST(ASTTest, WhileNode_ConditionTrue)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
+    drv.curScope().push_back(assignmentNode);
 
     const auto condition = drv.construct<AST::BinaryOpNode>(
         drv.construct<AST::VariableNode>("x"), AST::BinaryOp::LS,
@@ -364,8 +364,8 @@ TEST(ASTTest, WhileNode_ConditionTrue)
 
     ASSERT_NE(whileNode, nullptr);
 
-    drv.cur_scope().push_back(whileNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(whileNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.getInterpreterBuf(), 0);
@@ -381,7 +381,7 @@ TEST(ASTTest, IfNode_TrueCondition)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
+    drv.curScope().push_back(assignmentNode);
 
     const auto condition = drv.construct<AST::BinaryOpNode>(
         drv.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ,
@@ -394,8 +394,8 @@ TEST(ASTTest, IfNode_TrueCondition)
 
     ASSERT_NE(ifNode, nullptr);
 
-    drv.cur_scope().push_back(ifNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(ifNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.getInterpreterBuf(), 20);
@@ -415,8 +415,8 @@ TEST(ASTTest, IfNode_FalseCondition)
 
     ASSERT_NE(ifNode, nullptr);
 
-    drv.cur_scope().push_back(ifNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(ifNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.varInitialized("y"), false);
@@ -434,15 +434,15 @@ TEST(ASTTest, PrintNode)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
+    drv.curScope().push_back(assignmentNode);
 
     auto printNode =
         drv.construct<AST::PrintNode>(drv.construct<AST::VariableNode>("x"));
 
     ASSERT_NE(printNode, nullptr);
 
-    drv.cur_scope().push_back(printNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(printNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(out.str(), "42\n");

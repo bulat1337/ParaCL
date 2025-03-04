@@ -49,7 +49,7 @@ class Context final
                                  "\n");
     }
 
-    auto &get_variable(std::string_view destName)
+    auto &getVar(std::string_view destName)
     {
         int32_t scopeId = 0;
 
