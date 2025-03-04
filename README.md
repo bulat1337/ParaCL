@@ -2,7 +2,7 @@
 
 ## About
 
-Simple C-like language.
+Frontend for simple C-like language.
 
 ### Tools
 
