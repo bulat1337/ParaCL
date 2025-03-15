@@ -48,18 +48,14 @@ class Context final
     }
 
 	template <typename T>
-    T* getVar(std::string_view destName)
-    {
-		for (auto iter = varTables_.rbegin() ; iter != varTables_.rend() ; ++iter)
+	std::unique_ptr<IType>& getVar(std::string_view destName)
+	{
+		for (auto iter = varTables_.rbegin(); iter != varTables_.rend(); ++iter)
 		{
 			auto var_iter = iter->find(destName);
 			if (var_iter != iter->end())
 			{
-				auto ptr = dynamic_cast<T*>(var_iter->second.get());
-
-				if (!ptr) throw std::runtime_error("Invalid type\n");
-
-				return ptr;
+				return var_iter->second;
 			}
 		}
 
@@ -68,13 +64,26 @@ class Context final
 
 		auto& curScope = varTables_.back();
 		auto [iter, inserted] = curScope.emplace(destName, std::make_unique<T>());
-
 		if (!inserted)
-			throw std::logic_error(	"Undeclared variable was supposed to be inserted:"
-									"Check code logic\n");
+			throw std::logic_error("Undeclared variable was supposed to be inserted: Check code logic\n");
 
-		return static_cast<T*>(iter->second.get());
-    }
+		return iter->second;
+	}
+
+	std::unique_ptr<IType>& getArray(std::string_view destName)
+	{
+		for (auto iter = varTables_.rbegin(); iter != varTables_.rend(); ++iter)
+		{
+			auto var_iter = iter->find(destName);
+			if (var_iter != iter->end())
+			{
+				return var_iter->second;
+			}
+		}
+
+		throw std::runtime_error("Undefined Array\n");
+	}
+
 };
 
 } // namespace detail

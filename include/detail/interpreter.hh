@@ -174,25 +174,76 @@ class Interpreter final : public Visitor
 		buf_ = storage_.get();
     }
 
-    void visit(const AssignNode& node) override
-    {
-        MSG("Evaluating assignment\n");
+	void visit(const AssignNode &node) override
+	{
+		MSG("Evaluating assignment\n");
 
-        MSG("Getting assigned value\n");
+		std::visit([this, &node](auto&& dest) {
+			using DestType = std::decay_t<decltype(dest)>;
 
-        node.acceptExpr(*this);
-        int value = static_cast<Integer*>(buf_)->value;
+			if constexpr (std::is_same_v<DestType, VariablePtr>)
+			{
+				std::string_view destName = node.getDestName();
 
-        LOG("Assigned value is {}\n", value);
+				std::visit([this, &destName, &node](auto&& src) {
+					using SrcType = std::decay_t<decltype(src)>;
 
-        std::string_view destName = node.getDestName();
+					node.acceptSrc(*this);
 
-       ctx_.getVar<Integer>(destName)->value = value;
+					if constexpr (std::is_same_v<SrcType, ExprPtr>)
+					{
+						MSG("It's Var-Expr assignment\n");
+						ctx_.getVar<Integer>(destName) = buf_->clone();
+					}
+					else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
+					{
+						MSG("It's Var-Repeat assignment\n");
+						ctx_.getVar<Array>(destName) = buf_->clone();
+					}
+				}, node.getSrc());
+			}
+			else
+			{
+				std::string_view destName = node.getDestName();
 
-		storage_.reset();
-		storage_ = std::make_unique<Integer>(value);
-		buf_ = storage_.get();
-    }
+				std::visit([this, &destName, &dest, &node](auto&& src) {
+					using SrcType = std::decay_t<decltype(src)>;
+
+					// TODO: no reason to differentiate
+
+					dest->acceptIndex(*this);
+					const auto index = static_cast<Integer*>(buf_)->value;
+
+					node.acceptSrc(*this);
+
+					if constexpr (std::is_same_v<SrcType, ExprPtr>)
+					{
+						MSG("It's ArrayElem-Expr assignment\n");
+
+						auto arrayPtr =
+							dynamic_cast<Array*>(ctx_.getArray(destName).get());
+
+						if (!arrayPtr) throw("Indexing non array type\n");
+
+
+						arrayPtr->assignElem(index, buf_);
+					}
+					else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
+					{
+						MSG("It's ArrayElem-Repeat assignment\n");
+
+						auto arrayPtr =
+							dynamic_cast<Array*>(ctx_.getArray(destName).get());
+
+						if (!arrayPtr) throw("Indexing non array type\n");
+
+
+						arrayPtr->assignElem(index, buf_);
+					}
+				}, node.getSrc());
+			}
+		}, node.getDest());
+	}
 
 	void visit(const ArrayElemNode& node) override
 	{
@@ -201,9 +252,21 @@ class Interpreter final : public Visitor
         node.acceptIndex(*this);
         int index = static_cast<Integer*>(buf_)->value;
 
+		LOG("Index: {}\n", index);
+
 		std::string_view destName = node.getName();
 
-		// buf_ = ctx_.getVar(destName).getElem(index);
+		LOG("Array Name: {}\n", destName);
+
+		auto arrayPtr = dynamic_cast<Array*>(ctx_.getArray(destName).get());
+
+		if (!arrayPtr)
+		{
+			std::cerr << destName << " is not an array type\n";
+			throw std::runtime_error("Can't use [] to non array variables\n");
+		}
+
+		buf_ = arrayPtr->getElem(index);
 	}
 
     void visit(const WhileNode &node) override
@@ -265,6 +328,40 @@ class Interpreter final : public Visitor
 		storage_ = std::make_unique<Integer>(value);
 		buf_ = storage_.get();
     }
+
+	void visit(const RepeatNode &node) override
+    {
+		MSG("Evaluating Repeat Node\n");
+
+		node.acceptSize(*this);
+
+		const auto size = static_cast<Integer*>(buf_)->value;
+
+		LOG("Size: {}\n", size);
+
+		if (node.hasElem())
+		{
+			MSG("Repeat has element prototype\n");
+
+			node.acceptElem(*this);
+
+			std::unique_ptr<IType> elem = buf_->clone();
+
+			LOG("Elem prototype: {}\n", static_cast<Integer*>(elem.get())->value);
+
+			storage_.reset();
+			storage_ = std::make_unique<Array>(elem.get(), size);
+			buf_ = storage_.get();
+		}
+		else
+		{
+			MSG("Undefined repeat\n");
+
+			storage_.reset();
+			storage_ = std::make_unique<Array>(size);
+			buf_ = storage_.get();
+		}
+	}
 
     bool varInitialized(std::string_view varName) const
     {

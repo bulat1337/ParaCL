@@ -185,38 +185,44 @@ class UnaryOpNode final : public ExpressionNode
     }
 };
 
-// class RepeatNode
-// {
-//   private:
-// 	IType
-// };
-
-// using RepeatPtr = RepeatNode*;
-
-class AssignNode final : public ExpressionNode
+class RepeatNode final : public StatementNode
 {
   private:
-    VariablePtr dest_{};
-    ExprPtr expr_{};
-
-	// TODO:
-    // std::variant<ExprPtr, RepeatPtr> expr_{};
+	ExprPtr elem_{};
+	ExprPtr size_{};
 
   public:
-    AssignNode(VariablePtr dest, ExprPtr expr)
-        : dest_(dest)
-        , expr_(expr)
-    {}
+	RepeatNode(ExprPtr size)
+	: size_(size) {}
 
-    void acceptExpr(detail::Visitor& visitor) const { expr_->accept(visitor); }
+	RepeatNode(ExprPtr expr, ExprPtr size)
+	: elem_(expr)
+	, size_(size) {}
 
-    std::string_view getDestName() const { return dest_->getName(); }
-
-    void accept(detail::Visitor& visitor) const override
+	void accept(detail::Visitor& visitor) const override
     {
         visitor.visit(*this);
     }
+
+	void acceptSize(detail::Visitor& visitor) const
+	{
+		size_->accept(visitor);
+	}
+
+	void acceptElem(detail::Visitor& visitor) const
+	{
+		if (!elem_) throw std::runtime_error("No defined element value\n");
+
+		elem_->accept(visitor);
+	}
+
+	bool hasElem() const
+	{
+		return elem_ != nullptr;
+	}
 };
+
+using RepeatPtr = RepeatNode*;
 
 class ArrayElemNode final : public ExpressionNode
 {
@@ -242,6 +248,48 @@ class ArrayElemNode final : public ExpressionNode
 	}
 
     std::string_view getName() const { return name_->getName(); }
+};
+
+using ArrayElemPtr = ArrayElemNode*;
+
+class AssignNode final : public ExpressionNode
+{
+  private:
+    std::variant<VariablePtr, ArrayElemPtr> dest_{};
+    std::variant<ExprPtr, RepeatPtr> src_{};
+
+  public:
+    AssignNode(	std::variant<VariablePtr, ArrayElemPtr> dest,
+				std::variant<ExprPtr, RepeatPtr> src)
+        : dest_(dest)
+        , src_(src)
+    {}
+
+    void acceptSrc(detail::Visitor& visitor) const
+	{
+    	std::visit([&visitor](auto&& node) { node->accept(visitor); }, src_);
+	}
+
+    std::string_view getDestName() const
+	{
+		return std::visit([](const auto& dest) -> std::string_view {
+			if constexpr (requires { dest->getName(); })
+			{
+				return dest->getName();
+			}
+			else
+				throw std::runtime_error("Can't get a name of an Array Element\n");
+		}, dest_);
+	}
+
+    void accept(detail::Visitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+	const std::variant<ExprPtr, RepeatPtr>& getSrc() const { return src_; }
+
+	const std::variant<VariablePtr, ArrayElemPtr>& getDest() const { return dest_; }
 };
 
 class WhileNode final : public ConditionalStatementNode

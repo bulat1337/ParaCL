@@ -85,6 +85,7 @@
 %nterm <AST::WhileNode*> 		WhileStm
 %nterm <AST::VariableNode*> 	Variable
 %nterm <AST::ArrayElemNode*>	ArrayElem
+%nterm <AST::RepeatNode*>		Repeat
 
 %nterm <AST::StatementNode*>	Statement
 
@@ -238,27 +239,44 @@ WhileStm:	WHILE "(" Expr ")" Statement
 
 Assign: Variable "=" Expr
 		{
-			$$ = drv.construct<AST::AssignNode>($1, $3);
-			LOG("Initialising assignment: {}\n", static_cast<const void*>($$));
-		}
-	/* |	Variable "=" Repeat
-		{
-			MSG("Constructing array Assign\n");
+			MSG("Constructing variable-expression Assign\n");
 
-			$$ = drv.construct<AST::AssignNode>
-		} */
+			$$ = drv.construct<AST::AssignNode>($1, $3);
+		}
+	|	Variable "=" Repeat
+		{
+			MSG("Constructing variable-repeat Assign\n");
+
+			$$ = drv.construct<AST::AssignNode>($1, $3);
+		}
+	|	ArrayElem "=" Expr
+		{
+			MSG("Constructing arrayElem-expression Assign\n");
+
+			$$ = drv.construct<AST::AssignNode>($1, $3);
+		}
+	|	ArrayElem "=" Repeat
+		{
+			MSG("Constructing arrayElem-repeat Assign\n");
+
+			$$ = drv.construct<AST::AssignNode>($1, $3);
+		}
 	;
 
-/* Repeat:	REPEAT LPAREN Expr COMMA Expr RPAREN
+Repeat:	REPEAT LPAREN Expr COMMA Expr RPAREN
 		{
+			MSG("Constructing Repeat\n");
 
+			$$ = drv.construct<AST::RepeatNode>($3, $5);
 		}
 	|
 		REPEAT LPAREN UNDEF COMMA Expr RPAREN
 		{
+			MSG("Constructing Repeat with undefined element\n");
 
+			$$ = drv.construct<AST::RepeatNode>($5);
 		}
-	; */
+	;
 
 ArrayElem: 	Variable LSPAREN Expr RSPAREN
 			{
