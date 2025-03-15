@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "log.hh"
+#include "types.hh"
 
 namespace AST
 {
@@ -18,7 +19,7 @@ namespace detail
 class Context final
 {
   public:
-    using VarTable = std::unordered_map<std::string_view, int>;
+    using VarTable = std::unordered_map<std::string_view, std::unique_ptr<IType>>;
 
   public:
     std::vector<VarTable> varTables_;
@@ -29,7 +30,7 @@ class Context final
         : out(_out)
     {}
 
-    int getVarValue(std::string_view name) const
+    IType* getVarValue(std::string_view name) const
     {
         auto iter = varTables_.rbegin();
         auto rend = varTables_.rend();
@@ -39,28 +40,40 @@ class Context final
             auto it = iter->find(name);
 
             if (it != iter->end())
-            {
-                LOG("It's {}\n", it->second);
-                return it->second;
-            }
+            	return it->second.get();
         }
 
         throw std::runtime_error("Undeclared variable: " + std::string(name) +
                                  "\n");
     }
 
-    auto &getVar(std::string_view destName)
+	template <typename T>
+    T* getVar(std::string_view destName)
     {
-        int32_t scopeId = 0;
+		for (auto iter = varTables_.rbegin() ; iter != varTables_.rend() ; ++iter)
+		{
+			auto var_iter = iter->find(destName);
+			if (var_iter != iter->end())
+			{
+				auto ptr = dynamic_cast<T*>(var_iter->second.get());
 
-        while (scopeId < static_cast<int32_t>(varTables_.size()) - 1)
-        {
-            if (varTables_[scopeId].contains(destName))
-                break;
-            scopeId++;
-        }
+				if (!ptr) throw std::runtime_error("Invalid type\n");
 
-        return varTables_[scopeId][destName];
+				return ptr;
+			}
+		}
+
+		if (varTables_.empty())
+			throw std::runtime_error("No active scope\n");
+
+		auto& curScope = varTables_.back();
+		auto [iter, inserted] = curScope.emplace(destName, std::make_unique<T>());
+
+		if (!inserted)
+			throw std::logic_error(	"Undeclared variable was supposed to be inserted:"
+									"Check code logic\n");
+
+		return static_cast<T*>(iter->second.get());
     }
 };
 

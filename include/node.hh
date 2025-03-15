@@ -185,11 +185,22 @@ class UnaryOpNode final : public ExpressionNode
     }
 };
 
+// class RepeatNode
+// {
+//   private:
+// 	IType
+// };
+
+// using RepeatPtr = RepeatNode*;
+
 class AssignNode final : public ExpressionNode
 {
   private:
     VariablePtr dest_{};
     ExprPtr expr_{};
+
+	// TODO:
+    // std::variant<ExprPtr, RepeatPtr> expr_{};
 
   public:
     AssignNode(VariablePtr dest, ExprPtr expr)
@@ -205,6 +216,32 @@ class AssignNode final : public ExpressionNode
     {
         visitor.visit(*this);
     }
+};
+
+class ArrayElemNode final : public ExpressionNode
+{
+  private:
+	VariablePtr name_{};
+	ExprPtr index_{};
+
+  public:
+	ArrayElemNode(VariablePtr name, ExprPtr index)
+		: name_(name)
+		, index_(index)
+	{}
+
+	void accept(detail::Visitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+	void acceptIndex(detail::Visitor& visitor) const
+	{
+		MSG("Getting index value\n");
+		index_->accept(visitor);
+	}
+
+    std::string_view getName() const { return name_->getName(); }
 };
 
 class WhileNode final : public ConditionalStatementNode

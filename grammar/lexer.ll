@@ -65,6 +65,11 @@ BLANK 	[ \t\r]
 "%"			return yy::parser::make_MOD			(loc);
 "&&"		return yy::parser::make_AND			(loc);
 "||"		return yy::parser::make_OR			(loc);
+"repeat"	return yy::parser::make_REPEAT		(loc);
+"undef"		return yy::parser::make_UNDEF		(loc);
+"["			return yy::parser::make_LSPAREN		(loc);
+"]"			return yy::parser::make_RSPAREN		(loc);
+","			return yy::parser::make_COMMA		(loc);
 
 
 {INT}		return make_NUMBER (yytext, loc);

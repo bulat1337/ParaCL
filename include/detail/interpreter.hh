@@ -4,6 +4,7 @@
 #include "log.hh"
 #include "node.hh"
 #include "visitor.hh"
+#include "types.hh"
 
 namespace AST
 {
@@ -15,16 +16,22 @@ class Interpreter final : public Visitor
 {
   private:
     detail::Context ctx_;
-    int buf_{};
+    IType* buf_{};
+	std::unique_ptr<IType> storage_;
 
   public:
     Interpreter(std::ostream &out = std::cout)
         : ctx_(out)
     {}
 
-    int getBuf() const { return buf_; }
+    int getBuf() const { return static_cast<Integer*>(buf_)->value; }
 
-    void visit(const ConstantNode &node) override { buf_ = node.getVal(); }
+    void visit(const ConstantNode &node) override
+	{
+		storage_.reset();
+		storage_ = std::make_unique<Integer>(node.getVal());
+		buf_ = storage_.get();
+	}
 
     void visit(const VariableNode &node) override
     {
@@ -39,12 +46,12 @@ class Interpreter final : public Visitor
         MSG("Evaluating Binary Operation\n");
 
         node.accept_left(*this);
-        int leftVal = buf_;
+        int leftVal = static_cast<Integer*>(buf_)->value;
 
         node.accept_right(*this);
-        int rightVal = buf_;
+        int rightVal = static_cast<Integer*>(buf_)->value;
 
-        int result = 0;
+        int result{};
 
         switch (node.getOp())
         {
@@ -62,9 +69,8 @@ class Interpreter final : public Visitor
 
             case BinaryOp::DIV:
                 if (rightVal == 0)
-                {
-                    throw std::runtime_error("Divide by zero");
-                }
+					throw std::runtime_error("Divide by zero");
+
                 result = leftVal / rightVal;
                 break;
 
@@ -110,7 +116,10 @@ class Interpreter final : public Visitor
 
         LOG("It's {}\n", result);
 
-        buf_ = result;
+		storage_.reset();
+		storage_ = std::make_unique<Integer>(result);
+
+        buf_ = storage_.get();
     }
 
     void visit(const ScopeNode &node) override
@@ -142,47 +151,67 @@ class Interpreter final : public Visitor
         MSG("Evaluating Unary Operation\n");
 
         node.acceptOperand(*this);
-        int operandVal = buf_;
+        int operandVal = static_cast<Integer*>(buf_)->value;
+
+		int result{};
 
         switch (node.getOp())
         {
             case UnaryOp::NEG:
-                buf_ = -operandVal;
+                result = -operandVal;
                 break;
 
             case UnaryOp::NOT:
-                buf_ = !operandVal;
+                result = !operandVal;
                 break;
 
             default:
                 throw std::runtime_error("Unknown unary operation");
         }
+
+		storage_.reset();
+		storage_ = std::make_unique<Integer>(result);
+		buf_ = storage_.get();
     }
 
-    void visit(const AssignNode &node) override
+    void visit(const AssignNode& node) override
     {
         MSG("Evaluating assignment\n");
 
         MSG("Getting assigned value\n");
 
         node.acceptExpr(*this);
-        int value = buf_;
+        int value = static_cast<Integer*>(buf_)->value;
 
         LOG("Assigned value is {}\n", value);
 
         std::string_view destName = node.getDestName();
 
-        ctx_.getVar(destName) = value;
+       ctx_.getVar<Integer>(destName)->value = value;
 
-        buf_ = value;
+		storage_.reset();
+		storage_ = std::make_unique<Integer>(value);
+		buf_ = storage_.get();
     }
+
+	void visit(const ArrayElemNode& node) override
+	{
+		MSG("Evaluating ArrayElemNode\n");
+
+        node.acceptIndex(*this);
+        int index = static_cast<Integer*>(buf_)->value;
+
+		std::string_view destName = node.getName();
+
+		// buf_ = ctx_.getVar(destName).getElem(index);
+	}
 
     void visit(const WhileNode &node) override
     {
         // node.acceptCond(*this);
         // int cond = buf_;
 
-        while (node.acceptCond(*this), buf_)
+        while (node.acceptCond(*this), static_cast<Integer*>(buf_)->value)
         {
             node.acceptScope(*this);
         }
@@ -198,7 +227,7 @@ class Interpreter final : public Visitor
         }
 
         node.acceptCond(*this);
-        int cond = buf_;
+        int cond = static_cast<Integer*>(buf_)->value;
 
         if (cond)
         {
@@ -216,7 +245,7 @@ class Interpreter final : public Visitor
         MSG("Evaluation print\n");
 
         node.acceptExpr(*this);
-        int value = buf_;
+        int value = static_cast<Integer*>(buf_)->value;
 
         ctx_.out << value << '\n';
     }
@@ -232,7 +261,9 @@ class Interpreter final : public Visitor
             throw std::runtime_error("Incorrect input");
         }
 
-        buf_ = value;
+		storage_.reset();
+		storage_ = std::make_unique<Integer>(value);
+		buf_ = storage_.get();
     }
 
     bool varInitialized(std::string_view varName) const

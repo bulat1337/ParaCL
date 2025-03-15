@@ -61,6 +61,11 @@
 	MOD			"%"
 	AND			"&&"
 	OR 			"||"
+	REPEAT		"repeat"
+	UNDEF		"undef"
+	LSPAREN		"["
+	RSPAREN		"]"
+	COMMA		","
 ;
 
 %token <std::string>	ID		"identifier"
@@ -79,6 +84,7 @@
 %nterm <AST::IfElseNode*> 		Else_If
 %nterm <AST::WhileNode*> 		WhileStm
 %nterm <AST::VariableNode*> 	Variable
+%nterm <AST::ArrayElemNode*>	ArrayElem
 
 %nterm <AST::StatementNode*>	Statement
 
@@ -234,14 +240,38 @@ Assign: Variable "=" Expr
 		{
 			$$ = drv.construct<AST::AssignNode>($1, $3);
 			LOG("Initialising assignment: {}\n", static_cast<const void*>($$));
-		};
+		}
+	/* |	Variable "=" Repeat
+		{
+			MSG("Constructing array Assign\n");
+
+			$$ = drv.construct<AST::AssignNode>
+		} */
+	;
+
+/* Repeat:	REPEAT LPAREN Expr COMMA Expr RPAREN
+		{
+
+		}
+	|
+		REPEAT LPAREN UNDEF COMMA Expr RPAREN
+		{
+
+		}
+	; */
+
+ArrayElem: 	Variable LSPAREN Expr RSPAREN
+			{
+				MSG("Constructing ArrayElem\n");
+
+				$$ = drv.construct<AST::ArrayElemNode>($1, $3);
+			}
 
 Print: 	"print" Expr
 		{
 			MSG("Initialising print\n");
 			$$ = drv.construct<AST::PrintNode>($2);
 		}
-
 
 Expr:	BinaryOp
 		{
@@ -260,7 +290,7 @@ Expr:	BinaryOp
 		}
   	| 	NUMBER
 		{
-			MSG("Initialising AST::ConstantNode\n");
+			LOG("Initialising AST::ConstantNode: {}\n", $1);
 			$$ = drv.construct<AST::ConstantNode>($1);
 		}
 	| 	"?"
@@ -277,6 +307,12 @@ Expr:	BinaryOp
 		{
 			LOG("It's Assign. Moving from concrete rule: {}\n",
 				static_cast<const void*>($$));
+
+			$$ = $1;
+		}
+	| 	ArrayElem
+		{
+			MSG("It's Array Elem\n");
 
 			$$ = $1;
 		}
@@ -364,7 +400,7 @@ UnaryOp	: 	"-" Expr %prec UMINUS
 
 Variable: 	ID
 			{
-				MSG("Initialising AST::VariableNode\n");
+				LOG("Initialising AST::VariableNode: {}\n", $1);
 				$$ = drv.construct<AST::VariableNode>(drv.internName($1));
 			};
 
