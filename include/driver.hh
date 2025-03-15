@@ -23,13 +23,13 @@ class Driver final
   private: /* members */
     std::string file_;
     AST::AST ast_;
-    std::vector<std::vector<AST::StmtPtr>> stm_table_;
+    std::vector<std::vector<AST::StmtPtr>> stmTable_;
 
   public:
     Driver(std::ostream &out = std::cout)
         : ast_(out)
     {
-        stm_table_.push_back(std::vector<AST::StmtPtr>());
+        stmTable_.push_back(std::vector<AST::StmtPtr>());
     }
 
     const AST::ScopeNode *getGlobalScope() const { return ast_.globalScope; }
@@ -42,19 +42,19 @@ class Driver final
         return ast_.construct<NodeType>(std::forward<Args>(args)...);
     }
 
-    AST::ScopeNode *form_scope()
+    AST::ScopeNode *formScope()
     {
-        return construct<AST::ScopeNode>(std::move(stm_table_.back()));
+        return construct<AST::ScopeNode>(std::move(stmTable_.back()));
     }
 
-    auto &cur_scope() { return stm_table_.back(); }
-    const auto &cur_scope() const { return stm_table_.back(); }
+    auto &curScope() { return stmTable_.back(); }
+    const auto &curScope() const { return stmTable_.back(); }
 
-    void pop_scope() { stm_table_.pop_back(); }
+    void popScope() { stmTable_.pop_back(); }
 
-    void init_scope() { stm_table_.emplace_back(); }
+    void initScope() { stmTable_.emplace_back(); }
 
-    void form_global_scope() { ast_.globalScope = form_scope(); }
+    void formGlobalScope() { ast_.globalScope = formScope(); }
 
     int getInterpreterBuf() const { return ast_.getInterpreterBuf(); }
 
@@ -63,9 +63,9 @@ class Driver final
         return ast_.varInitialized(varName);
     }
 
-    std::string_view intern_name(std::string_view name)
+    std::string_view internName(std::string_view name)
     {
-        return ast_.intern_name(name);
+        return ast_.internName(name);
     }
 
     int parse(const std::string &f)
@@ -74,7 +74,7 @@ class Driver final
 
         location.initialize(&file_);
 
-        scan_begin();
+        scanBegin();
 
         yy::parser parse(*this);
 
@@ -84,12 +84,12 @@ class Driver final
 
         int status = parse();
 
-        scan_end();
+        scanEnd();
 
         return status;
     }
 
-    void scan_begin()
+    void scanBegin()
     {
         yy_flex_debug = YY_FLEX_DEBUG;
 
@@ -99,5 +99,5 @@ class Driver final
             throw std::runtime_error("Can't open input file_\n");
     }
 
-    void scan_end() { fclose(yyin); }
+    void scanEnd() { fclose(yyin); }
 };

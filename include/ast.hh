@@ -22,7 +22,7 @@ class AST final
   private:
     std::vector<std::unique_ptr<INode>> data_;
 
-    std::unordered_set<std::string> NamePool_;
+    std::unordered_set<std::string> namePool_;
 
     detail::Interpreter interpreter_;
 
@@ -49,9 +49,9 @@ class AST final
         return raw_data;
     }
 
-    std::string_view intern_name(std::string_view name)
+    std::string_view internName(std::string_view name)
     {
-        const auto it = NamePool_.insert(std::string(name)).first;
+        const auto it = namePool_.insert(std::string(name)).first;
 
         return *it;
     }

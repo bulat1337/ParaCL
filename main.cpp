@@ -5,7 +5,7 @@
 #include "driver.hh" // for Driver
 #include "log.hh"    // for LOG, MSG
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     MSG("MACROSES:\n");
     LOG("YYDEBUG: {}\n", YYDEBUG);
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         else
             status = drv.parse(argv[1]);
     }
-    catch (std::exception &e)
+    catch (std::exception& e)
     {
         std::cerr << e.what();
         return 0;
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     {
         drv.eval();
     }
-    catch (std::exception &e)
+    catch (std::exception& e)
     {
         std::cerr << e.what();
         return 0;
