@@ -38,7 +38,12 @@ class Array final : public IType
 	public:
 	Array() = default;
 
-	Array(int size) { data_.resize(size); }
+	Array(int size)
+	{
+		LOG("Constructing undefind array of size {}\n", size);
+
+		data_.resize(size);
+	}
 
 	Array(const IType* elem, int size)
 	{
@@ -58,7 +63,7 @@ class Array final : public IType
 
 		for (const auto& elem : data_)
 		{
-			clonedArray->data_.push_back(elem->clone());
+			clonedArray->data_.push_back(elem ? elem->clone() : nullptr);
 		}
 
 		return clonedArray;

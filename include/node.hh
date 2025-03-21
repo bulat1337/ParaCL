@@ -224,14 +224,18 @@ class RepeatNode final : public StatementNode
 
 using RepeatPtr = RepeatNode*;
 
+class ArrayElemNode;
+
+using ArrayElemPtr = ArrayElemNode*;
+
 class ArrayElemNode final : public ExpressionNode
 {
   private:
-	VariablePtr name_{};
+	std::variant<VariablePtr, ArrayElemPtr> name_{};
 	ExprPtr index_{};
 
   public:
-	ArrayElemNode(VariablePtr name, ExprPtr index)
+	ArrayElemNode(std::variant<VariablePtr, ArrayElemPtr> name, ExprPtr index)
 		: name_(name)
 		, index_(index)
 	{}
@@ -247,10 +251,35 @@ class ArrayElemNode final : public ExpressionNode
 		index_->accept(visitor);
 	}
 
-    std::string_view getName() const { return name_->getName(); }
-};
+	void acceptName(detail::Visitor& visitor) const
+	{
+		MSG("Accepting ArrayElem name\n");
 
-using ArrayElemPtr = ArrayElemNode*;
+		if (auto name = std::get_if<ArrayElemPtr>(&name_))
+			return (*name)->accept(visitor);
+
+		throw std::runtime_error("Can't accept ArrayElem name\n");
+	}
+
+    std::string_view getName() const
+	{
+		if (auto var = std::get_if<VariablePtr>(&name_))
+			return (*var)->getName();
+
+		throw std::runtime_error("Can't get name of arrayElem\n");
+	}
+
+	bool holdsVariable() const
+	{
+		return std::holds_alternative<VariablePtr>(name_);
+	}
+
+	bool holdsArrayElem() const
+	{
+		return std::holds_alternative<ArrayElemPtr>(name_);
+	}
+
+};
 
 class AssignNode final : public ExpressionNode
 {

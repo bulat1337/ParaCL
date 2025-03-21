@@ -280,10 +280,17 @@ Repeat:	REPEAT LPAREN Expr COMMA Expr RPAREN
 
 ArrayElem: 	Variable LSPAREN Expr RSPAREN
 			{
-				MSG("Constructing ArrayElem\n");
+				MSG("Constructing ArrayElem from variable\n");
 
 				$$ = drv.construct<AST::ArrayElemNode>($1, $3);
 			}
+		|	ArrayElem LSPAREN Expr RSPAREN
+			{
+				MSG("Constructing ArrayElem from another ArrayElem\n");
+
+				$$ = drv.construct<AST::ArrayElemNode>($1, $3);
+			}
+		;
 
 Print: 	"print" Expr
 		{

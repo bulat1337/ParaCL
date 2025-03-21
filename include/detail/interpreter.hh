@@ -24,7 +24,7 @@ class Interpreter final : public Visitor
 	{
 	  private:
 	  	Interpreter& interpreter_;
-		AssignNode node_;
+		const AssignNode& node_;
 
 	  private:
 	  	class SrcVisitor
@@ -58,7 +58,7 @@ class Interpreter final : public Visitor
 		: interpreter_(interpreter)
 		, node_(node) {}
 
-	  	void operator()([[maybe_unused]]VariablePtr dest)
+	  	void operator()([[maybe_unused]]const VariablePtr dest)
 		{
 			std::string_view destName = node_.getDestName();
 
@@ -67,7 +67,7 @@ class Interpreter final : public Visitor
 			std::visit(SrcVisitor(interpreter_, destName), node_.getSrc());
 		}
 
-		void operator()(ArrayElemPtr dest)
+		void operator()(const ArrayElemPtr dest)
 		{
 			std::string_view destName = node_.getDestName();
 
@@ -254,22 +254,44 @@ class Interpreter final : public Visitor
 
         node.acceptIndex(*this);
         int index = static_cast<Integer*>(buf_)->value;
-
 		LOG("Index: {}\n", index);
 
-		std::string_view destName = node.getName();
-
-		LOG("Array Name: {}\n", destName);
-
-		auto arrayPtr = dynamic_cast<Array*>(ctx_.getArray(destName).get());
-
-		if (!arrayPtr)
+		if (node.holdsVariable())
 		{
-			std::cerr << destName << " is not an array type\n";
-			throw std::runtime_error("Can't use [] to non array variables\n");
-		}
+			std::string_view destName = node.getName();
 
-		buf_ = arrayPtr->getElem(index);
+			LOG("Array Name: {}\n", destName);
+
+			auto arrayPtr = dynamic_cast<Array*>(ctx_.getArray(destName).get());
+
+			if (!arrayPtr)
+			{
+				std::cerr << destName << " is not an array type\n";
+				throw std::runtime_error("Can't use [] to non array variables\n");
+			}
+
+			buf_ = arrayPtr->getElem(index);
+		}
+		else if (node.holdsArrayElem())
+		{
+			node.acceptName(*this);
+
+			auto arrayPtr = dynamic_cast<Array*>(buf_);
+
+			if (!arrayPtr)
+			{
+				throw std::runtime_error(
+					"ArrayElem name acceptance "
+					"did not result in Array\n"
+				);
+			}
+
+			buf_ = arrayPtr->getElem(index);
+		}
+		else
+		{
+			throw std::runtime_error("Array element holds invalid type\n");
+		}
 	}
 
     void visit(const WhileNode &node) override

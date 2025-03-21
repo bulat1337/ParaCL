@@ -84,6 +84,10 @@ TEST(common, comp_simple) { test_utils::run_test("/common/comp_simple"); }
 
 TEST(common, mod) { test_utils::run_test("/common/mod"); }
 
+TEST(common, array_basic_1) { test_utils::run_test("/common/array_basic_1"); }
+
+TEST(common, array_undef) { test_utils::run_test("/common/array_undef"); }
+
 TEST(ASTTest, CreateConstant)
 {
     AST::AST ast;

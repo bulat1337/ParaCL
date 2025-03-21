@@ -1,0 +1,10 @@
+array = repeat(7, 10);
+
+index = 0;
+
+while (index < 10)
+{
+	print array[0];
+
+	index = index + 1;
+}
