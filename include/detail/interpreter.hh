@@ -372,8 +372,6 @@ class Interpreter final : public Visitor
 
 			std::unique_ptr<IType> elem = buf_->clone();
 
-			LOG("Elem prototype: {}\n", static_cast<Integer*>(elem.get())->value);
-
 			storage_.reset();
 			storage_ = std::make_unique<Array>(elem.get(), size);
 			buf_ = storage_.get();

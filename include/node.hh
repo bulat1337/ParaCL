@@ -185,18 +185,22 @@ class UnaryOpNode final : public ExpressionNode
     }
 };
 
+class RepeatNode;
+
+using RepeatPtr = RepeatNode*;
+
 class RepeatNode final : public StatementNode
 {
   private:
-	ExprPtr elem_{};
+	std::variant<ExprPtr, RepeatPtr> elem_{};
 	ExprPtr size_{};
 
   public:
 	RepeatNode(ExprPtr size)
 	: size_(size) {}
 
-	RepeatNode(ExprPtr expr, ExprPtr size)
-	: elem_(expr)
+	RepeatNode(std::variant<ExprPtr, RepeatPtr> elem, ExprPtr size)
+	: elem_(elem)
 	, size_(size) {}
 
 	void accept(detail::Visitor& visitor) const override
@@ -211,18 +215,21 @@ class RepeatNode final : public StatementNode
 
 	void acceptElem(detail::Visitor& visitor) const
 	{
-		if (!elem_) throw std::runtime_error("No defined element value\n");
+		std::visit([&](auto&& elem) {
+			if (!elem) throw std::runtime_error("No defined element value\n");
 
-		elem_->accept(visitor);
+			elem->accept(visitor);
+		}, elem_);
+
 	}
 
 	bool hasElem() const
 	{
-		return elem_ != nullptr;
+		return std::visit([&](auto&& elem) {
+			return elem != nullptr;
+		}, elem_);
 	}
 };
-
-using RepeatPtr = RepeatNode*;
 
 class ArrayElemNode;
 

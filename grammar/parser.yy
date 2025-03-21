@@ -265,12 +265,17 @@ Assign: Variable "=" Expr
 
 Repeat:	REPEAT LPAREN Expr COMMA Expr RPAREN
 		{
-			MSG("Constructing Repeat\n");
+			MSG("Constructing Repeat with Expr element\n");
 
 			$$ = drv.construct<AST::RepeatNode>($3, $5);
 		}
-	|
-		REPEAT LPAREN UNDEF COMMA Expr RPAREN
+	|	REPEAT LPAREN Repeat COMMA Expr RPAREN
+		{
+			MSG("Constructing Repeat with Array element\n");
+
+			$$ = drv.construct<AST::RepeatNode>($3, $5);
+		}
+	|	REPEAT LPAREN UNDEF COMMA Expr RPAREN
 		{
 			MSG("Constructing Repeat with undefined element\n");
 

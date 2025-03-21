@@ -88,6 +88,10 @@ TEST(common, array_basic_1) { test_utils::run_test("/common/array_basic_1"); }
 
 TEST(common, array_undef) { test_utils::run_test("/common/array_undef"); }
 
+TEST(common, array_multidim) { test_utils::run_test("/common/array_multidim"); }
+
+TEST(common, array_repeat_in_repeat) { test_utils::run_test("/common/array_repeat_in_repeat"); }
+
 TEST(ASTTest, CreateConstant)
 {
     AST::AST ast;
