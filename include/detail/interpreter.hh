@@ -19,6 +19,83 @@ class Interpreter final : public Visitor
     IType* buf_{};
 	std::unique_ptr<IType> storage_;
 
+  private:
+	class AssignVisitor
+	{
+	  private:
+	  	Interpreter& interpreter_;
+		AssignNode node_;
+
+	  public:
+		explicit AssignVisitor(Interpreter& interpreter, const AssignNode& node)
+		: interpreter_(interpreter)
+		, node_(node) {}
+
+	  	void operator()(VariablePtr dest)
+		{
+			std::string_view destName = node_.getDestName();
+
+			std::visit([this, &destName](auto&& src) {
+				using SrcType = std::decay_t<decltype(src)>;
+
+				node_.acceptSrc(interpreter_);
+
+				if constexpr (std::is_same_v<SrcType, ExprPtr>)
+				{
+					MSG("It's Var-Expr assignment\n");
+					interpreter_.ctx_.getVar<Integer>(destName) =
+						interpreter_.buf_->clone();
+				}
+				else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
+				{
+					MSG("It's Var-Repeat assignment\n");
+					interpreter_.ctx_.getVar<Array>(destName) =
+						interpreter_.buf_->clone();
+				}
+			}, node_.getSrc());
+		}
+
+		void operator()(ArrayElemPtr dest)
+		{
+			std::string_view destName = node_.getDestName();
+
+			std::visit([this, &destName, &dest](auto&& src) {
+				using SrcType = std::decay_t<decltype(src)>;
+
+				// TODO: no reason to differentiate
+
+				dest->acceptIndex(interpreter_);
+				const auto index = static_cast<Integer*>(interpreter_.buf_)->value;
+
+				node_.acceptSrc(interpreter_);
+
+				if constexpr (std::is_same_v<SrcType, ExprPtr>)
+				{
+					MSG("It's ArrayElem-Expr assignment\n");
+
+					auto arrayPtr =
+						dynamic_cast<Array*>(interpreter_.ctx_.getArray(destName).get());
+
+					if (!arrayPtr) throw("Indexing non array type\n");
+
+					arrayPtr->assignElem(index, interpreter_.buf_);
+				}
+				else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
+				{
+					MSG("It's ArrayElem-Repeat assignment\n");
+
+					auto arrayPtr =
+						dynamic_cast<Array*>(interpreter_.ctx_.getArray(destName).get());
+
+					if (!arrayPtr) throw("Indexing non array type\n");
+
+					arrayPtr->assignElem(index, interpreter_.buf_);
+				}
+			}, node_.getSrc());
+		}
+
+	};
+
   public:
     Interpreter(std::ostream &out = std::cout)
         : ctx_(out)
@@ -178,71 +255,7 @@ class Interpreter final : public Visitor
 	{
 		MSG("Evaluating assignment\n");
 
-		std::visit([this, &node](auto&& dest) {
-			using DestType = std::decay_t<decltype(dest)>;
-
-			if constexpr (std::is_same_v<DestType, VariablePtr>)
-			{
-				std::string_view destName = node.getDestName();
-
-				std::visit([this, &destName, &node](auto&& src) {
-					using SrcType = std::decay_t<decltype(src)>;
-
-					node.acceptSrc(*this);
-
-					if constexpr (std::is_same_v<SrcType, ExprPtr>)
-					{
-						MSG("It's Var-Expr assignment\n");
-						ctx_.getVar<Integer>(destName) = buf_->clone();
-					}
-					else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
-					{
-						MSG("It's Var-Repeat assignment\n");
-						ctx_.getVar<Array>(destName) = buf_->clone();
-					}
-				}, node.getSrc());
-			}
-			else
-			{
-				std::string_view destName = node.getDestName();
-
-				std::visit([this, &destName, &dest, &node](auto&& src) {
-					using SrcType = std::decay_t<decltype(src)>;
-
-					// TODO: no reason to differentiate
-
-					dest->acceptIndex(*this);
-					const auto index = static_cast<Integer*>(buf_)->value;
-
-					node.acceptSrc(*this);
-
-					if constexpr (std::is_same_v<SrcType, ExprPtr>)
-					{
-						MSG("It's ArrayElem-Expr assignment\n");
-
-						auto arrayPtr =
-							dynamic_cast<Array*>(ctx_.getArray(destName).get());
-
-						if (!arrayPtr) throw("Indexing non array type\n");
-
-
-						arrayPtr->assignElem(index, buf_);
-					}
-					else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
-					{
-						MSG("It's ArrayElem-Repeat assignment\n");
-
-						auto arrayPtr =
-							dynamic_cast<Array*>(ctx_.getArray(destName).get());
-
-						if (!arrayPtr) throw("Indexing non array type\n");
-
-
-						arrayPtr->assignElem(index, buf_);
-					}
-				}, node.getSrc());
-			}
-		}, node.getDest());
+		std::visit(AssignVisitor(*this, node), node.getDest());
 	}
 
 	void visit(const ArrayElemNode& node) override
