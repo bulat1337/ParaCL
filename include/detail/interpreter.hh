@@ -26,72 +26,62 @@ class Interpreter final : public Visitor
 	  	Interpreter& interpreter_;
 		AssignNode node_;
 
+	  private:
+	  	class SrcVisitor
+		{
+		  private:
+		  	Interpreter& interpreter_;
+			std::string_view destName_;
+
+		  public:
+			SrcVisitor(Interpreter& interpreter, std::string_view destName)
+			: interpreter_(interpreter)
+			, destName_(destName) {}
+
+		  	void operator()([[maybe_unused]]ExprPtr src)
+			{
+				MSG("It's Var-Expr assignment\n");
+				interpreter_.ctx_.getVar<Integer>(destName_) =
+					interpreter_.buf_->clone();
+			}
+
+			void operator()([[maybe_unused]]RepeatPtr src)
+			{
+				MSG("It's Var-Repeat assignment\n");
+				interpreter_.ctx_.getVar<Array>(destName_) =
+					interpreter_.buf_->clone();
+			}
+		};
+
 	  public:
 		explicit AssignVisitor(Interpreter& interpreter, const AssignNode& node)
 		: interpreter_(interpreter)
 		, node_(node) {}
 
-	  	void operator()(VariablePtr dest)
+	  	void operator()([[maybe_unused]]VariablePtr dest)
 		{
 			std::string_view destName = node_.getDestName();
 
-			std::visit([this, &destName](auto&& src) {
-				using SrcType = std::decay_t<decltype(src)>;
+			node_.acceptSrc(interpreter_);
 
-				node_.acceptSrc(interpreter_);
-
-				if constexpr (std::is_same_v<SrcType, ExprPtr>)
-				{
-					MSG("It's Var-Expr assignment\n");
-					interpreter_.ctx_.getVar<Integer>(destName) =
-						interpreter_.buf_->clone();
-				}
-				else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
-				{
-					MSG("It's Var-Repeat assignment\n");
-					interpreter_.ctx_.getVar<Array>(destName) =
-						interpreter_.buf_->clone();
-				}
-			}, node_.getSrc());
+			std::visit(SrcVisitor(interpreter_, destName), node_.getSrc());
 		}
 
 		void operator()(ArrayElemPtr dest)
 		{
 			std::string_view destName = node_.getDestName();
 
-			std::visit([this, &destName, &dest](auto&& src) {
-				using SrcType = std::decay_t<decltype(src)>;
+			dest->acceptIndex(interpreter_);
+			const auto index = static_cast<Integer*>(interpreter_.buf_)->value;
 
-				// TODO: no reason to differentiate
+			node_.acceptSrc(interpreter_);
 
-				dest->acceptIndex(interpreter_);
-				const auto index = static_cast<Integer*>(interpreter_.buf_)->value;
+			auto arrayPtr =
+				dynamic_cast<Array*>(interpreter_.ctx_.getArray(destName).get());
 
-				node_.acceptSrc(interpreter_);
+			if (!arrayPtr) throw("Indexing non array type\n");
 
-				if constexpr (std::is_same_v<SrcType, ExprPtr>)
-				{
-					MSG("It's ArrayElem-Expr assignment\n");
-
-					auto arrayPtr =
-						dynamic_cast<Array*>(interpreter_.ctx_.getArray(destName).get());
-
-					if (!arrayPtr) throw("Indexing non array type\n");
-
-					arrayPtr->assignElem(index, interpreter_.buf_);
-				}
-				else if constexpr (std::is_same_v<SrcType, RepeatPtr>)
-				{
-					MSG("It's ArrayElem-Repeat assignment\n");
-
-					auto arrayPtr =
-						dynamic_cast<Array*>(interpreter_.ctx_.getArray(destName).get());
-
-					if (!arrayPtr) throw("Indexing non array type\n");
-
-					arrayPtr->assignElem(index, interpreter_.buf_);
-				}
-			}, node_.getSrc());
+			arrayPtr->assignElem(index, interpreter_.buf_);
 		}
 
 	};
