@@ -1,0 +1,5 @@
+array = repeat(undef, 10);
+
+array[0] = repeat(7, 10);
+
+print array[0][0];

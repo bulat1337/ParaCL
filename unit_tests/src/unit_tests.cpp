@@ -1,11 +1,15 @@
-#include "ast.hh"
-#include "interpreter.hh"
-#include "node.hh"
-#include "test_utils.hh" // for run_test
+#include <gtest/gtest.h>   // for Test, Message, TestInfo (ptr only), CmpHel...
+#include <sstream>         // for basic_stringstream, basic_iostream, basic_...
+#include <stdexcept>       // for runtime_error
+#include <string>          // for basic_string, allocator, char_traits
+#include <string_view>     // for basic_string_view
+#include <vector>          // for vector
 
-#include <gtest/gtest.h> // for Test, TestInfo (ptr only), TEST
-#include <string>        // for basic_string
-#include <vector>
+#include "ast.hh"          // for AST
+#include "driver.hh"       // for Driver
+#include "interpreter.hh"  // for Interpreter
+#include "node.hh"         // for ConstantNode, BinaryOpNode, AssignNode
+#include "test_utils.hh"   // for run_test
 
 TEST(common, basic_1) { test_utils::run_test("/common/basic_1"); }
 
@@ -79,6 +83,14 @@ TEST(common, mod_simple) { test_utils::run_test("/common/mod_simple"); }
 TEST(common, comp_simple) { test_utils::run_test("/common/comp_simple"); }
 
 TEST(common, mod) { test_utils::run_test("/common/mod"); }
+
+TEST(common, array_basic_1) { test_utils::run_test("/common/array_basic_1"); }
+
+TEST(common, array_undef) { test_utils::run_test("/common/array_undef"); }
+
+TEST(common, array_multidim) { test_utils::run_test("/common/array_multidim"); }
+
+TEST(common, array_repeat_in_repeat) { test_utils::run_test("/common/array_repeat_in_repeat"); }
 
 TEST(ASTTest, CreateConstant)
 {
@@ -333,8 +345,8 @@ TEST(ASTTest, CreateAssignmentNode)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(assignmentNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.getInterpreterBuf(), 42);
@@ -350,7 +362,7 @@ TEST(ASTTest, WhileNode_ConditionTrue)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
+    drv.curScope().push_back(assignmentNode);
 
     const auto condition = drv.construct<AST::BinaryOpNode>(
         drv.construct<AST::VariableNode>("x"), AST::BinaryOp::LS,
@@ -364,8 +376,8 @@ TEST(ASTTest, WhileNode_ConditionTrue)
 
     ASSERT_NE(whileNode, nullptr);
 
-    drv.cur_scope().push_back(whileNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(whileNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.getInterpreterBuf(), 0);
@@ -381,7 +393,7 @@ TEST(ASTTest, IfNode_TrueCondition)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
+    drv.curScope().push_back(assignmentNode);
 
     const auto condition = drv.construct<AST::BinaryOpNode>(
         drv.construct<AST::VariableNode>("x"), AST::BinaryOp::EQ,
@@ -394,8 +406,8 @@ TEST(ASTTest, IfNode_TrueCondition)
 
     ASSERT_NE(ifNode, nullptr);
 
-    drv.cur_scope().push_back(ifNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(ifNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.getInterpreterBuf(), 20);
@@ -415,8 +427,8 @@ TEST(ASTTest, IfNode_FalseCondition)
 
     ASSERT_NE(ifNode, nullptr);
 
-    drv.cur_scope().push_back(ifNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(ifNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(drv.varInitialized("y"), false);
@@ -434,15 +446,15 @@ TEST(ASTTest, PrintNode)
 
     ASSERT_NE(assignmentNode, nullptr);
 
-    drv.cur_scope().push_back(assignmentNode);
+    drv.curScope().push_back(assignmentNode);
 
     auto printNode =
         drv.construct<AST::PrintNode>(drv.construct<AST::VariableNode>("x"));
 
     ASSERT_NE(printNode, nullptr);
 
-    drv.cur_scope().push_back(printNode);
-    drv.form_global_scope();
+    drv.curScope().push_back(printNode);
+    drv.formGlobalScope();
     drv.eval();
 
     EXPECT_EQ(out.str(), "42\n");

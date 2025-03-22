@@ -1,0 +1,21 @@
+row = 5;
+col = 9;
+
+array = repeat(repeat(7, row), col);
+
+row_id = 0;
+
+
+while (row_id < row)
+{
+	col_id = 0;
+
+	while (col_id < col)
+	{
+		print array[col_id][row_id];
+
+		col_id = col_id + 1;
+	}
+
+	row_id = row_id + 1;
+}

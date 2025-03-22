@@ -9,10 +9,12 @@ class BinaryOpNode;
 class ScopeNode;
 class UnaryOpNode;
 class AssignNode;
+class ArrayElemNode;
 class WhileNode;
 class IfElseNode;
 class PrintNode;
 class InNode;
+class RepeatNode;
 
 namespace detail
 {
@@ -26,10 +28,12 @@ class Visitor
     virtual void visit(const ScopeNode &node) = 0;
     virtual void visit(const UnaryOpNode &node) = 0;
     virtual void visit(const AssignNode &node) = 0;
+	virtual void visit(const ArrayElemNode &node) = 0;
     virtual void visit(const WhileNode &node) = 0;
     virtual void visit(const IfElseNode &node) = 0;
     virtual void visit(const PrintNode &node) = 0;
     virtual void visit(const InNode &node) = 0;
+    virtual void visit(const RepeatNode &node) = 0;
 
     virtual ~Visitor() = default;
 };
