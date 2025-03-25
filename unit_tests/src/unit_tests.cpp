@@ -92,6 +92,8 @@ TEST(common, array_multidim) { test_utils::run_test("/common/array_multidim"); }
 
 TEST(common, array_repeat_in_repeat) { test_utils::run_test("/common/array_repeat_in_repeat"); }
 
+TEST(common, array_super_multi_dim) { test_utils::run_test("/common/array_super_multi_dim"); }
+
 TEST(ASTTest, CreateConstant)
 {
     AST::AST ast;
