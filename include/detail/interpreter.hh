@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include "context.hh"
 #include "log.hh"
 #include "node.hh"
