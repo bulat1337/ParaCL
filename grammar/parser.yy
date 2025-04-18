@@ -91,10 +91,13 @@
 
 %nonassoc "if"
 %nonassoc "print"
+%left "||"
+%left "&&"
+%left "==" "!="
 %left "<" ">" "<=" ">="
 %left "="
 %left "+" "-"
-%left "*" "/"
+%left "*" "/" "%"
 %nonassoc UMINUS NOT
 
 %%
