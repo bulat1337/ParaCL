@@ -15,6 +15,7 @@ class IfElseNode;
 class PrintNode;
 class InNode;
 class RepeatNode;
+class ArrayInitNode;
 
 namespace detail
 {
@@ -34,6 +35,7 @@ class Visitor
     virtual void visit(const PrintNode &node) = 0;
     virtual void visit(const InNode &node) = 0;
     virtual void visit(const RepeatNode &node) = 0;
+    virtual void visit(const ArrayInitNode &node) = 0;
 
     virtual ~Visitor() = default;
 };

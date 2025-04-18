@@ -66,6 +66,7 @@ BLANK 	[ \t\r]
 "&&"		return yy::parser::make_AND			(loc);
 "||"		return yy::parser::make_OR			(loc);
 "repeat"	return yy::parser::make_REPEAT		(loc);
+"array"		return yy::parser::make_ARRAY		(loc);
 "undef"		return yy::parser::make_UNDEF		(loc);
 "["			return yy::parser::make_LSPAREN		(loc);
 "]"			return yy::parser::make_RSPAREN		(loc);

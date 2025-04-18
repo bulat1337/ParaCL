@@ -17,19 +17,24 @@ YY_DECL;
 
 class Driver final
 {
+  private:
+      using Scope = std::vector<AST::StmtPtr>;
+
   public:
     yy::location location;
 
-  private: /* members */
+  private:
     std::string file_;
     AST::AST ast_;
-    std::vector<std::vector<AST::StmtPtr>> stmTable_;
+    std::vector<Scope> stmTable_;
+    std::vector<AST::ExprPtr> init_list_;
+
 
   public:
     Driver(std::ostream &out = std::cout)
         : ast_(out)
     {
-        stmTable_.push_back(std::vector<AST::StmtPtr>());
+        stmTable_.push_back(Scope());
     }
 
     const AST::ScopeNode *getGlobalScope() const { return ast_.globalScope; }
@@ -47,8 +52,8 @@ class Driver final
         return construct<AST::ScopeNode>(std::move(stmTable_.back()));
     }
 
-    auto &curScope() { return stmTable_.back(); }
-    const auto &curScope() const { return stmTable_.back(); }
+    Scope& curScope() { return stmTable_.back(); }
+    const Scope& curScope() const { return stmTable_.back(); }
 
     void popScope() { stmTable_.pop_back(); }
 
@@ -66,6 +71,16 @@ class Driver final
     std::string_view internName(std::string_view name)
     {
         return ast_.internName(name);
+    }
+
+    void pushToInitList(AST::ExprPtr expr)
+    {
+        init_list_.push_back(expr);
+    }
+
+    std::vector<AST::ExprPtr>& getInitList() 
+    {
+        return init_list_;
     }
 
     int parse(const std::string &f)

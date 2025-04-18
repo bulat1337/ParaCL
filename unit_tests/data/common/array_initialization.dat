@@ -1,0 +1,9 @@
+var = array(1, 2, 3);
+
+id = 0;
+
+while (id < 3) {
+    print var[id];
+
+    id = id + 1;
+}

@@ -1,5 +1,5 @@
-array = repeat(undef, 10);
+arr = repeat(undef, 10);
 
-array[0] = 42;
+arr[0] = 42;
 
-print array[0];
+print arr[0];

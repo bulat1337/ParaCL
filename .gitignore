@@ -6,3 +6,4 @@ tmp
 conan
 third_party
 CMakeUserPresets.json
+a.out

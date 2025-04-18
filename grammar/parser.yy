@@ -63,6 +63,7 @@
 	OR 			"||"
 	REPEAT		"repeat"
 	UNDEF		"undef"
+	ARRAY		"array"
 	LSPAREN		"["
 	RSPAREN		"]"
 	COMMA		","
@@ -80,12 +81,11 @@
 %nterm <AST::PrintNode*> 		Print
 %nterm <AST::IfElseNode*> 		IfStm
 %nterm <AST::IfElseNode*> 		ElseLike
-%nterm <AST::IfElseNode*> 		Else
-%nterm <AST::IfElseNode*> 		Else_If
 %nterm <AST::WhileNode*> 		WhileStm
 %nterm <AST::VariableNode*> 	Variable
 %nterm <AST::ArrayElemNode*>	ArrayElem
 %nterm <AST::RepeatNode*>		Repeat
+%nterm <AST::ArrayInitNode*>	ArrayInit
 
 %nterm <AST::StatementNode*>	Statement
 
@@ -93,9 +93,13 @@
 
 %nonassoc "if"
 %nonassoc "print"
-%left "="
+%right "="
+%left "||"
+%left "&&"
+%left "==" "!="
+%left "<" ">" "<=" ">="
 %left "+" "-"
-%left "*" "/"
+%left "*" "/" "%"
 %nonassoc UMINUS NOT
 
 %%
@@ -108,6 +112,11 @@ Program: 	Statements YYEOF
 					LOG("{}\n", static_cast<const void*>(stm));
 				}
 
+				drv.formGlobalScope();
+			}
+		|	YYEOF
+			{
+				MSG("Blank code.\n");
 				drv.formGlobalScope();
 			}
 	   ;
@@ -131,10 +140,6 @@ Statements: Statement
 
 
 				drv.curScope().push_back(stm);
-			}
-		| 	/* nothing */
-		  	{
-				MSG("Void statement\n");
 			}
 		|	";"
 		 	{
@@ -193,7 +198,16 @@ Scope: 	StartScope Statements EndScope
 			MSG("Scope end.\n");
 
 			drv.popScope();
-		};
+		}
+	|	StartScope EndScope
+		{
+			MSG("Initialising empty scope\n");
+
+			$$ = drv.formScope();
+
+			drv.popScope();
+		}
+	;
 
 StartScope: "{"
 			{
@@ -249,6 +263,12 @@ Assign: Variable "=" Expr
 
 			$$ = drv.construct<AST::AssignNode>($1, $3);
 		}
+	|	Variable "=" ArrayInit
+		{
+			MSG("Constructing variable-array Assign\n");
+
+			$$ = drv.construct<AST::AssignNode>($1, $3);
+		}
 	|	ArrayElem "=" Expr
 		{
 			MSG("Constructing arrayElem-expression Assign\n");
@@ -280,6 +300,30 @@ Repeat:	REPEAT LPAREN Expr COMMA Expr RPAREN
 			MSG("Constructing Repeat with undefined element\n");
 
 			$$ = drv.construct<AST::RepeatNode>($5);
+		}
+	;
+
+ArrayInit: 	ARRAY LPAREN Elems RPAREN 
+			{
+				$$ = drv.construct<AST::ArrayInitNode>(std::move(drv.getInitList()));
+			}
+		;
+
+Elems: 	Expr
+		{
+			LOG("Pushing expression to initializer list: {}\n", static_cast<void*>($1));
+			drv.pushToInitList($1);
+		}		
+	|
+		Expr COMMA Elems
+		{
+			LOG("Pushing expression to initializer list: {}\n", static_cast<void*>($1));
+			drv.pushToInitList($1);
+		}
+	|
+		/* nothing */
+		{
+			MSG("Empty initializer list.\n");
 		}
 	;
 

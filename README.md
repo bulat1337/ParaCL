@@ -53,6 +53,12 @@ Simply include `paracl.h` in your code
 2) `make`
 3) `ctest`
 
+or just run test binary:
+
+```
+./unit_tests/unit_tests
+```
+
 #### CMake Configuration Options
 
 Customize the build with the following CMake options:
