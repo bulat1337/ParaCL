@@ -11,8 +11,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <vector>
 #include <variant>
+#include <vector>
 
 namespace AST
 {
@@ -187,146 +187,170 @@ class UnaryOpNode final : public ExpressionNode
 };
 
 class RepeatNode;
-
 using RepeatPtr = RepeatNode*;
+
+class ArrayInitNode : public StatementNode
+{
+  private:
+    std::vector<ExprPtr> init_list_;
+
+  public:
+    ArrayInitNode(std::vector<ExprPtr>&& init_list)
+        : init_list_(std::move(init_list))
+    {}
+
+    void accept(detail::Visitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+};
+
+using ArrayInitPtr = ArrayInitNode*;
+
+
+using Rhs = std::variant<ExprPtr, RepeatPtr, ArrayInitPtr>;
 
 class RepeatNode final : public StatementNode
 {
   private:
-	std::variant<ExprPtr, RepeatPtr> elem_{};
-	ExprPtr size_{};
+    Rhs elem_{};
+    ExprPtr size_{};
 
   public:
-	RepeatNode(ExprPtr size)
-	: size_(size) {}
-
-	RepeatNode(std::variant<ExprPtr, RepeatPtr> elem, ExprPtr size)
-	: elem_(elem)
-	, size_(size) {}
-
-	void accept(detail::Visitor& visitor) const override
-    {
-        visitor.visit(*this);
-    }
-
-	void acceptSize(detail::Visitor& visitor) const
-	{
-		size_->accept(visitor);
-	}
-
-	void acceptElem(detail::Visitor& visitor) const
-	{
-		std::visit([&](auto&& elem) {
-			if (!elem) throw std::runtime_error("No defined element value\n");
-
-			elem->accept(visitor);
-		}, elem_);
-
-	}
-
-	bool hasElem() const
-	{
-		return std::visit([&](auto&& elem) {
-			return elem != nullptr;
-		}, elem_);
-	}
-};
-
-class ArrayElemNode;
-
-using ArrayElemPtr = ArrayElemNode*;
-
-class ArrayElemNode final : public ExpressionNode
-{
-  private:
-	std::variant<VariablePtr, ArrayElemPtr> name_{};
-	ExprPtr index_{};
-
-  public:
-	ArrayElemNode(std::variant<VariablePtr, ArrayElemPtr> name, ExprPtr index)
-		: name_(name)
-		, index_(index)
-	{}
-
-	void accept(detail::Visitor& visitor) const override
-    {
-        visitor.visit(*this);
-    }
-
-	void acceptIndex(detail::Visitor& visitor) const
-	{
-		MSG("Getting index value\n");
-		index_->accept(visitor);
-	}
-
-	void acceptName(detail::Visitor& visitor) const
-	{
-		MSG("Accepting ArrayElem name\n");
-
-		if (auto name = std::get_if<ArrayElemPtr>(&name_))
-			return (*name)->accept(visitor);
-
-		throw std::runtime_error("Can't accept ArrayElem name\n");
-	}
-
-    std::string_view getName() const
-	{
-		if (auto var = std::get_if<VariablePtr>(&name_))
-			return (*var)->getName();
-
-		throw std::runtime_error("Can't get name of arrayElem\n");
-	}
-
-	bool holdsVariable() const
-	{
-		return std::holds_alternative<VariablePtr>(name_);
-	}
-
-	bool holdsArrayElem() const
-	{
-		return std::holds_alternative<ArrayElemPtr>(name_);
-	}
-
-};
-
-class AssignNode final : public ExpressionNode
-{
-  private:
-    std::variant<VariablePtr, ArrayElemPtr> dest_{};
-    std::variant<ExprPtr, RepeatPtr> src_{};
-
-  public:
-    AssignNode(	std::variant<VariablePtr, ArrayElemPtr> dest,
-				std::variant<ExprPtr, RepeatPtr> src)
-        : dest_(dest)
-        , src_(src)
+    RepeatNode(ExprPtr size)
+        : size_(size)
     {}
 
-    void acceptSrc(detail::Visitor& visitor) const
-	{
-    	std::visit([&visitor](auto&& node) { node->accept(visitor); }, src_);
-	}
-
-    std::string_view getDestName() const
-	{
-		return std::visit([](const auto& dest) -> std::string_view {
-			if constexpr (requires { dest->getName(); })
-			{
-				return dest->getName();
-			}
-			else
-				throw std::runtime_error("Can't get a name of an Array Element\n");
-		}, dest_);
-	}
+    RepeatNode(Rhs elem, ExprPtr size)
+        : elem_(elem)
+        , size_(size)
+    {}
 
     void accept(detail::Visitor& visitor) const override
     {
         visitor.visit(*this);
     }
 
-	const std::variant<ExprPtr, RepeatPtr>& getSrc() const { return src_; }
+    void acceptSize(detail::Visitor& visitor) const { size_->accept(visitor); }
 
-	const std::variant<VariablePtr, ArrayElemPtr>& getDest() const { return dest_; }
+    void acceptElem(detail::Visitor& visitor) const
+    {
+        std::visit(
+            [&](auto&& elem)
+            {
+                if (!elem)
+                    throw std::runtime_error("No defined element value\n");
+
+                elem->accept(visitor);
+            },
+            elem_);
+    }
+
+    bool hasElem() const
+    {
+        return std::visit([&](auto&& elem) { return elem != nullptr; }, elem_);
+    }
+};
+
+class ArrayElemNode;
+
+using ArrayElemPtr = ArrayElemNode*;
+
+using Lhs = std::variant<VariablePtr, ArrayElemPtr>;
+
+class ArrayElemNode final : public ExpressionNode
+{
+  private:
+    Lhs name_{};
+    ExprPtr index_{};
+
+  public:
+    ArrayElemNode(Lhs name, ExprPtr index)
+        : name_(name)
+        , index_(index)
+    {}
+
+    void accept(detail::Visitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    void acceptIndex(detail::Visitor& visitor) const
+    {
+        MSG("Getting index value\n");
+        index_->accept(visitor);
+    }
+
+    void acceptName(detail::Visitor& visitor) const
+    {
+        MSG("Accepting ArrayElem name\n");
+
+        if (auto name = std::get_if<ArrayElemPtr>(&name_))
+            return (*name)->accept(visitor);
+
+        throw std::runtime_error("Can't accept ArrayElem name\n");
+    }
+
+    std::string_view getName() const
+    {
+        if (auto var = std::get_if<VariablePtr>(&name_))
+            return (*var)->getName();
+
+        throw std::runtime_error("Can't get name of arrayElem\n");
+    }
+
+    bool holdsVariable() const
+    {
+        return std::holds_alternative<VariablePtr>(name_);
+    }
+
+    bool holdsArrayElem() const
+    {
+        return std::holds_alternative<ArrayElemPtr>(name_);
+    }
+};
+
+class AssignNode final : public ExpressionNode
+{
+  private:
+    Lhs dest_{};
+    Rhs src_{};
+
+  public:
+    AssignNode(Lhs dest, Rhs src)
+        : dest_(dest)
+        , src_(src)
+    {}
+
+    void acceptSrc(detail::Visitor& visitor) const
+    {
+        std::visit([&visitor](auto&& node) { node->accept(visitor); }, src_);
+    }
+
+    std::string_view getDestName() const
+    {
+        return std::visit(
+            [](const auto& dest) -> std::string_view
+            {
+                if constexpr (requires { dest->getName(); })
+                {
+                    return dest->getName();
+                }
+                else
+                    throw std::runtime_error(
+                        "Can't get a name of an Array Element\n");
+            },
+            dest_);
+    }
+
+    void accept(detail::Visitor& visitor) const override
+    {
+        visitor.visit(*this);
+    }
+
+    const Rhs& getSrc() const { return src_; }
+
+    const Lhs& getDest() const { return dest_; }
 };
 
 class WhileNode final : public ConditionalStatementNode

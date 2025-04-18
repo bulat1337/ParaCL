@@ -53,6 +53,13 @@ class Interpreter final : public Visitor
 				interpreter_.ctx_.getVar<Array>(destName_) =
 					interpreter_.buf_->clone();
 			}
+
+            void operator()([[maybe_unused]]ArrayInitPtr src)
+            {
+                MSG("It's Var-ArrayInit assignment\n");
+                interpreter_.ctx_.getVar<Array>(destName_) =
+                    interpreter_.buf_->clone();
+            }
 		};
 
 	  public:
@@ -81,7 +88,7 @@ class Interpreter final : public Visitor
 			auto arrayPtr =
 				dynamic_cast<Array*>(interpreter_.ctx_.getArray(destName).get());
 
-			if (!arrayPtr) throw("Indexing non array type\n");
+			if (!arrayPtr) throw std::runtime_error("Indexing non array type\n");
 
 			arrayPtr->assignElem(index, interpreter_.buf_);
 		}
@@ -387,6 +394,11 @@ class Interpreter final : public Visitor
 			buf_ = storage_.get();
 		}
 	}
+
+    void visit(const ArrayInitNode& node) override
+    {
+        throw std::runtime_error("Array initialization is not implemented yet\n");
+    }
 
     bool varInitialized(std::string_view varName) const
     {
