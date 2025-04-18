@@ -80,8 +80,6 @@
 %nterm <AST::PrintNode*> 		Print
 %nterm <AST::IfElseNode*> 		IfStm
 %nterm <AST::IfElseNode*> 		ElseLike
-%nterm <AST::IfElseNode*> 		Else
-%nterm <AST::IfElseNode*> 		Else_If
 %nterm <AST::WhileNode*> 		WhileStm
 %nterm <AST::VariableNode*> 	Variable
 %nterm <AST::ArrayElemNode*>	ArrayElem
@@ -110,6 +108,11 @@ Program: 	Statements YYEOF
 
 				drv.formGlobalScope();
 			}
+		|	YYEOF
+			{
+				MSG("Blank code.\n");
+				drv.formGlobalScope();
+			}
 	   ;
 
 Statements: Statement
@@ -131,10 +134,6 @@ Statements: Statement
 
 
 				drv.curScope().push_back(stm);
-			}
-		| 	/* nothing */
-		  	{
-				MSG("Void statement\n");
 			}
 		|	";"
 		 	{
@@ -193,7 +192,16 @@ Scope: 	StartScope Statements EndScope
 			MSG("Scope end.\n");
 
 			drv.popScope();
-		};
+		}
+	|	StartScope EndScope
+		{
+			MSG("Initialising empty scope\n");
+
+			$$ = drv.formScope();
+
+			drv.popScope();
+		}
+	;
 
 StartScope: "{"
 			{
