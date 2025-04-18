@@ -91,6 +91,7 @@
 
 %nonassoc "if"
 %nonassoc "print"
+%left "<" ">" "<=" ">="
 %left "="
 %left "+" "-"
 %left "*" "/"

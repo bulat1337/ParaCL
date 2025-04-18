@@ -13,6 +13,9 @@ set(ENABLE_GRAMMAR_LOG ${ENABLE_GRAMMAR_LOG} CACHE BOOL "Enable logging" FORCE)
 option(ENABLE_BD_TESTS "Enables big data tests" OFF)
 set(ENABLE_BD_TESTS ${ENABLE_BD_TESTS} CACHE BOOL "Enables big data tests" FORCE)
 
+option(ENABLE_COUNTER_EXAMPLES "Enable counter examples" OFF)
+set(ENABLE_COUNTER_EXAMPLES ${ENABLE_COUNTER_EXAMPLES} CACHE BOOL "Enable counter examples" FORCE)
+
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Build type")
 add_subdirectory(unit_tests/)
 
@@ -98,8 +101,18 @@ find_package(FLEX REQUIRED)
 set(BISON_INPUT ${CMAKE_SOURCE_DIR}/grammar/parser.yy)
 set(FLEX_INPUT ${CMAKE_SOURCE_DIR}/grammar/lexer.ll)
 
+if (ENABLE_COUNTER_EXAMPLES)
+	set(BISON_OPTIONS 
+		-Wcounterexamples
+	)
+else()
+	set(BISON_OPTIONS
+	
+	)
+endif()
+
 BISON_TARGET(Parser ${BISON_INPUT} ${CMAKE_BINARY_DIR}/parser/parser.cpp
-    COMPILE_FLAGS "--defines=${CMAKE_BINARY_DIR}/parser/parser.hh")
+    COMPILE_FLAGS "--defines=${CMAKE_BINARY_DIR}/parser/parser.hh ${BISON_OPTIONS}")
 
 FLEX_TARGET(Lexer ${FLEX_INPUT} ${CMAKE_BINARY_DIR}/parser/lexer.cpp)
 
