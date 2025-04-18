@@ -305,7 +305,7 @@ Repeat:	REPEAT LPAREN Expr COMMA Expr RPAREN
 
 ArrayInit: 	ARRAY LPAREN Elems RPAREN 
 			{
-				drv.construct<AST::ArrayInitNode>(std::move(drv.getInitList()));
+				$$ = drv.construct<AST::ArrayInitNode>(std::move(drv.getInitList()));
 			}
 		;
 

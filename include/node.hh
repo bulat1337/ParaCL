@@ -203,6 +203,16 @@ class ArrayInitNode : public StatementNode
     {
         visitor.visit(*this);
     }
+
+    size_t arraySize() const 
+    {
+        return init_list_.size();
+    }
+
+    void acceptElem(size_t index, detail::Visitor& visitor) const
+    {
+        init_list_[index]->accept(visitor);
+    }
 };
 
 using ArrayInitPtr = ArrayInitNode*;

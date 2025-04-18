@@ -397,7 +397,22 @@ class Interpreter final : public Visitor
 
     void visit(const ArrayInitNode& node) override
     {
-        throw std::runtime_error("Array initialization is not implemented yet\n");
+        MSG("Evaluating Array Init Node\n");
+
+        size_t array_size = node.arraySize();
+
+        std::vector<std::unique_ptr<IType>> data;
+
+        for (int id = array_size - 1 ; id >= 0 ; --id)
+        {
+            node.acceptElem(id, *this);
+
+            data.push_back(std::move(buf_->clone()));
+        }
+
+        storage_.reset();
+        storage_ = std::make_unique<Array>(std::move(data));
+        buf_ = storage_.get();
     }
 
     bool varInitialized(std::string_view varName) const

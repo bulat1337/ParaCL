@@ -55,6 +55,11 @@ class Array final : public IType
 		}
 	}
 
+	Array(std::vector<std::unique_ptr<IType>>&& data) 
+	{
+		data_ = std::move(data);
+	}
+
 	std::unique_ptr<IType> clone() const override
 	{
 		auto clonedArray = std::make_unique<Array>();
